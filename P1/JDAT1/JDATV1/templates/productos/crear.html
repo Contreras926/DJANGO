@@ -1,0 +1,19 @@
+{% extends 'paginas/base.html' %}
+
+{% block titulo %}AGREGAR PRODUCTO{% endblock %}
+
+{% block contenido %}
+
+    <div class="card">
+        <div class="card-header">Crear Producto</div>
+        <div class="card-body">
+            <h4 class="card-title">Datos del producto</h4>
+            {% include 'productos/form.html'%}
+
+            
+        </div>
+        <div class="card-footer text-muted"></div>
+    </div>
+    
+
+{% endblock %}

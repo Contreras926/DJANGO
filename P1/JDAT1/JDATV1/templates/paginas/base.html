@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block titulo %}{% endblock %}</title>
+    <title></title>
 
     <!-- Bootstrap CSS -->
     <link 
@@ -91,14 +91,14 @@
     <!-- BARRA SUPERIOR -->
     <div class="topbar shadow-sm">
       <button id="toggleSidebar" class="text-primary">&#9776;</button>
-      <h5 class="m-0 fw-bold text-primary">Mi Inventario</h5>
+      <h5 class="m-0 fw-bold text-primary">{% block titulo %}  {% endblock %}</h5>
       <a href="#" class="text-danger fw-semibold text-decoration-none">Salir</a>
     </div>
 
     <!-- SIDEBAR -->
     <div id="sidebar" class="sidebar">
-      <a href="#" class="active">INICIO</a>
-      <a href="#">AGREGAR PRODUCTOS</a>
+      <a href="{% url 'inicio' %}" class="active">INICIO</a>
+      <a href="{% url 'productos' %}">AGREGAR PRODUCTOS</a>
       <a href="#">MODIFICAR</a>
       <a href="#">ELIMINAR</a>
       <a href="#">GENERAR REPORTES</a>
@@ -107,7 +107,7 @@
     <!-- CONTENIDO PRINCIPAL -->
     <div id="content" class="content">
       {% block contenido %}
-      <h3 class="text-center">Sección de Nosotros</h3>
+      
       {% endblock %}
     </div>
 
