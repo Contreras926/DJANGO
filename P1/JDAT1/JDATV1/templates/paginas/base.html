@@ -1,49 +1,134 @@
+{% load static %}
 <!doctype html>
-<html lang="en">
-    <head>
-        <title>Title</title>
-        <!-- Required meta tags -->
-        <meta charset="utf-8" />
-        <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1, shrink-to-fit=no"
-        />
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block titulo %}{% endblock %}</title>
 
-        <!-- Bootstrap CSS v5.2.1 -->
-        <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-            rel="stylesheet"
-            integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
-            crossorigin="anonymous"
-        />
-    </head>
+    <!-- Bootstrap CSS -->
+    <link 
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" 
+      rel="stylesheet"
+      crossorigin="anonymous">
 
-    <body>
-        <div
-            class="container"
-             
-        >
-            bs5-grid-row
-        </div>
-        
-        <header>
-            <!-- place navbar here -->
-        </header>
-        <main></main>
-        <footer>
-            <!-- place footer here -->
-        </footer>
-        <!-- Bootstrap JavaScript Libraries -->
-        <script
-            src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
-            integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
-            crossorigin="anonymous"
-        ></script>
+    <style>
+      body {
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
 
-        <script
-            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
-            integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
-            crossorigin="anonymous"
-        ></script>
-    </body>
+      /* Sidebar */
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 250px;
+        background-color: #00152b;
+        border-right: 1px solid #00152b;
+        transition: all 0.3s;
+        padding-top: 60px;
+      }
+
+      .sidebar.collapsed {
+        margin-left: -250px;
+      }
+
+      .sidebar a {
+        display: block;
+        padding: 10px 20px;
+        color: #ffffff;
+        text-decoration: none;
+      }
+
+      .sidebar a:hover {
+        background-color: #e9ecef;
+        color: #0d6efd;
+      }
+
+      .sidebar .active {
+        background-color: #0d6efd;
+        color: #fff !important;
+      }
+
+      /* Navbar superior */
+      .topbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 60px;
+        background-color: #ffffff;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        z-index: 1000;
+      }
+
+      .topbar button {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+      }
+
+      /* Contenido */
+      .content {
+        margin-left: 250px;
+        padding: 80px 30px 30px;
+        transition: margin-left 0.3s;
+      }
+
+      .content.expanded {
+        margin-left: 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- BARRA SUPERIOR -->
+    <div class="topbar shadow-sm">
+      <button id="toggleSidebar" class="text-primary">&#9776;</button>
+      <h5 class="m-0 fw-bold text-primary">Mi Inventario</h5>
+      <a href="#" class="text-danger fw-semibold text-decoration-none">Salir</a>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div id="sidebar" class="sidebar">
+      <a href="#" class="active">INICIO</a>
+      <a href="#">AGREGAR PRODUCTOS</a>
+      <a href="#">MODIFICAR</a>
+      <a href="#">ELIMINAR</a>
+      <a href="#">GENERAR REPORTES</a>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div id="content" class="content">
+      {% block contenido %}
+      <h3 class="text-center">Sección de Nosotros</h3>
+      {% endblock %}
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script 
+      src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" 
+      crossorigin="anonymous"></script>
+    <script 
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" 
+      crossorigin="anonymous"></script>
+
+    <!-- Script para colapsar sidebar -->
+    <script>
+      const sidebar = document.getElementById('sidebar');
+      const content = document.getElementById('content');
+      const toggleBtn = document.getElementById('toggleSidebar');
+
+      toggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+        content.classList.toggle('expanded');
+      });
+    </script>
+  </body>
 </html>
