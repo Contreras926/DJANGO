@@ -1,5 +1,5 @@
 {% block content %}
-<h1>Iniciar sesión</h1>
+<h1>Registro de Usuario</h1>
 
 {% if messages %}
 <ul>
@@ -9,9 +9,9 @@
 </ul>
 {% endif %}
 
-<form method="POST" action="/signin/">
+<form method="POST">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Iniciar sesión</button>
+    <button type="submit">Registrarse</button>
 </form>
 {% endblock %}
