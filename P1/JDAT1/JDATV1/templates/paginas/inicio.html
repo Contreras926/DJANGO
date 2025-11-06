@@ -1,19 +1,60 @@
 {% extends 'paginas/base.html' %}
 
-{% block titulo %}INICIO{% endblock %}
 
 {% block contenido %}
 
-    <div class="p-5 mb-4 bg-light rounded-3">
-        <div class="container-fluid py-5">
-            <h1 class="display-5 fw-bold">BIENVENIDO A JDAT</h1>
-            <p class="col-md-8 fs-4">
-                SISTEMA GESTION DE INVENTARIO
-            </p>
-            <button class="btn btn-primary btn-lg" type="button">
-                INICIAR
-            </button>
+    <div class="row g-3">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 position-relative" style="height: 150px; top: 280px; left: 185px; right: 80px; background: #d1cfcf7a;">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <h5 class="card-title">Agregar</h5>
+                    <a href="{% url 'crear_producto' %}" class="btn btn-primary btn-ir w-50" 
+                    style="
+                        position:absolute;
+                        bottom: 10px; 
+                        right: 8px; 
+                        border-radius: 8px;
+                        height: 35px;
+                        background: linear-gradient(90deg, #0056D2, #009FFD);
+                        border: none;
+                        ">Ir</a>
+                </div>
+            </div>
         </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 position-relative" style="height: 150px; top: 280px; left: 185px; right: 80px; background: #d1cfcf7a;">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <h5 class="card-title">Actualizar</h5>
+                    <a href="{% url 'crear_producto' %}" class="btn btn-primary btn-ir w-50" 
+                    style="
+                        position:absolute;
+                        bottom: 10px; 
+                        right: 10px; 
+                        border-radius: 8px;
+                        height: 35px;
+                        background: linear-gradient(90deg, #0056D2, #009FFD);
+                        border: none;
+                        ">Ir</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 position-relative" style="height: 150px; top: 280px; left: 185px; right: 80px; background: #d1cfcf7a;">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <h5 class="card-title">Eliminar</h5>
+                    <a href="{% url 'crear_producto' %}" class="btn btn-primary btn-ir w-50" 
+                    style="
+                        position:absolute;
+                        bottom: 10px; 
+                        right: 10px; 
+                        border-radius: 8px;
+                        height: 35px;
+                        background: linear-gradient(90deg, #0056D2, #009FFD);
+                        border: none;
+                        ">Ir</a>
+                </div>
+            </div>
+        </div>                  
     </div>
     
 
