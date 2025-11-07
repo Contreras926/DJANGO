@@ -5,10 +5,7 @@ from .forms import ProductoForm
 # Create your views here.
 
 def inicio(request):
-    return render (request, 'paginas/inicio.html') 
-
-def nosotros (request):
-    return render (request, 'paginas/nosotros.html')     
+    return render (request, 'paginas/inicio.html')   
 
 def productos (request):
     productos = Producto.objects.all()
