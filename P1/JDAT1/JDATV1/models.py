@@ -11,3 +11,11 @@ class Producto(models.Model):
     stockActual = models.IntegerField(verbose_name="Stock Actual")
 def __str__(self):
         return self.nombreProducto
+class Usuario(models.Model):
+    id = models.AutoField(primary_key=True)
+    nombreUsuario = models.CharField(max_length=100, verbose_name="Nombre de Usuario")
+    apellidoUsuario = models.CharField(max_length=100, verbose_name="Apellido de Usuario")
+    contrasena = models.CharField(max_length=100, verbose_name="Contraseña")
+    rol = models.CharField(max_length=50, verbose_name="Rol del Usuario")
+    correo = models.EmailField(verbose_name="Correo Electrónico")
+    

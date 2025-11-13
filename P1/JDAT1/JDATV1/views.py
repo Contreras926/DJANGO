@@ -2,6 +2,10 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from .models import Producto
 from .forms import ProductoForm
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+from django.contrib.auth import login, logout
+from django.db import IntegrityError
 # Create your views here.
 
 def inicio(request):
@@ -30,3 +34,34 @@ def eliminar_producto (request, id):
     libro = Producto.objects.get(id=id)
     libro.delete()
     return redirect('productos')
+
+def signup(request):
+    
+    if request.method == 'GET':
+        return render (request, 'paginas/signup.html' , {
+        'form': UserCreationForm
+        })
+    else:
+        if request.POST['password1'] == request.POST['password2']:    
+            try:
+                #Registrar usuario
+                user = User.objects.create_user(username=request.POST['usename'], password=request.
+                post['password1'])
+                user.save()
+                login(request, user)
+                return redirect('inicio')
+            except IntegrityError:
+                return render (request, 'paginas/signup.html' , {
+                'form': UserCreationForm,
+                "error": 'Usuario ya existe'
+                })
+        return render (request, 'paginas/signup.html' , {
+            'form': UserCreationForm,
+            "error": HttpResponse('Contraseñas no coinciden')
+        })
+            
+def signout(request):
+    logout(request)
+    return redirect('inicio')                
+        
+    

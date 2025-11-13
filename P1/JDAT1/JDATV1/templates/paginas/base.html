@@ -119,11 +119,11 @@
         <img src="{% static 'imagenes/jdat.jpg' %}" alt="LOGO JDAT" >
       </div>
       <a href="{% url 'inicio' %}" class="active">INICIO</a>
-      <a href="{% url 'productos' %}">AGREGAR PRODUCTOS</a>
+      <a href="{% url 'crear_producto' %}">AGREGAR PRODUCTOS</a>
       <a href="{% url 'productos' %}">MODIFICAR</a>
       <a href="{% url 'productos' %}">ELIMINAR</a>
       <a href="#">GENERAR REPORTES</a>
-      <a href="#">SALIR</a>
+      <a href="{% url 'signup' %}">SALIR</a>
 
       <button id="toggleSidebar" class="sidebar-toggle-btn">&lt;</button>
     </div>
