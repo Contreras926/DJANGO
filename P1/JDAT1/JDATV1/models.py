@@ -9,5 +9,18 @@ class Producto(models.Model):
     precioUnitario = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Precio Unitario")
     stockMinimo = models.IntegerField(verbose_name="Stock Mínimo")
     stockActual = models.IntegerField(verbose_name="Stock Actual")
-def __str__(self):
+    def __str__(self):
         return self.nombreProducto
+
+class Venta(models.Model):
+    producto = models.ForeignKey(Producto, on_delete = models.CASCADE, verbose_name="Producto")
+    cantidad = models.IntegerField(verbase_name="Cantidad Vendida")
+    fecha_venta = models.DecimalField(auto_now_add=True, verbose_name="Fecha de Venta")
+    precio_venta = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Precio de Venta")
+    
+    def __str__(self):
+        return f"{self.producto.nombreProducto} - {self.cantidad} unidades"
+    
+    class Meta:
+        verbose_name = "Venta"
+        verbose_name_plural = "Ventas"
