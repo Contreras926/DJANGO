@@ -9,10 +9,10 @@ urlpatterns = [
     path('productos/editar', views.editar_producto,name='editar_producto'),
     path('eliminar/<int:id>', views.eliminar_producto,name='eliminar_producto'),
     path('editar/<int:id>', views.editar_producto, name='editar_producto'), 
-    
+
     path('ventas/registrar/<int:id>', views.registrar_venta, name='registrar_venta'),
     path('reportes/ventas', views.reportes_ventas, name='reportes_ventas'),
-    path('logout/', views.logout_view, name='logout'),
+    path('paginas/logout/', views.logout_view, name='logout'),
     
-    path('signin/', views.signin, name='signin')
+    path('paginas/signin/', views.signin, name='signin')
 ]

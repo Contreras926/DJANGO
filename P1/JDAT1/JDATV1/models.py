@@ -14,8 +14,8 @@ class Producto(models.Model):
 
 class Venta(models.Model):
     producto = models.ForeignKey(Producto, on_delete = models.CASCADE, verbose_name="Producto")
-    cantidad = models.IntegerField(verbase_name="Cantidad Vendida")
-    fecha_venta = models.DecimalField(auto_now_add=True, verbose_name="Fecha de Venta")
+    cantidad = models.IntegerField(verbose_name="Cantidad Vendida")
+    fecha_venta = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Venta")
     precio_venta = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Precio de Venta")
     
     def __str__(self):

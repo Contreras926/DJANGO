@@ -11,6 +11,10 @@ from django.contrib import messages
 from django.db.models import Sum, F, FloatField
 from datetime import datetime
 import json
+from django.contrib.auth.decorators import login_required
+from django.db import transaction
+from .models import Venta
+
 
 
 # Create your views here.
@@ -86,7 +90,7 @@ def signin(request):
             return redirect('inicio')
 
 
-@login_required
+#@login_required
 @transaction.atomic
 def registrar_venta(request, id):
     producto = get_object_or_404(Producto, id=id)
@@ -113,7 +117,7 @@ def registrar_venta(request, id):
         Venta.objects.create(
             producto=producto,
             cantidad=cantidad,
-            precio_venta=producto.preciolmitario  # ← USA preciolmitario
+            precio_venta=producto.precioUnitario  # ← USA preciolmitario
         )
         
         # Actualizar stock
@@ -125,7 +129,7 @@ def registrar_venta(request, id):
     
     return render(request, 'ventas/registrar.html', {'producto': producto})
 
-@login_required
+#@login_required
 def reportes_ventas(request):
     # Obtener parámetros de filtro
     fecha_inicio = request.GET.get('fecha_inicio')

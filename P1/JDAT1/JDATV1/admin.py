@@ -3,7 +3,7 @@ from .models import Producto, Venta
 
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
-    list_display = ['nombreProducto', 'categoria', 'preciolmitario', 'stockActual', 'stockMinimo']  # ← MANTIENE preciolmitario
+    list_display = ['nombreProducto', 'categoria', 'precioUnitario', 'stockActual', 'stockMinimo']  # ← MANTIENE preciolmitario
     list_filter = ['categoria']
     search_fields = ['nombreProducto']
 
