@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'JDAT1.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'dbjdat',
+        'NAME': 'django_db',
         'USER': 'root',
         'PASSWORD': '',
         'HOST': 'localhost',
