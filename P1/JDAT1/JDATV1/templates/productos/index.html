@@ -29,7 +29,6 @@
                         <th>PRECIO</th>
                         <th>STOCK MÍN</th>
                         <th>STOCK ACTUAL</th>
-                        <th>ACCIONES</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -57,9 +56,6 @@
                                 </a>
                                 <a class="btn btn-danger btn-sm" href="{% url 'eliminar_producto' producto.id %}" title="Eliminar">
                                     <i class="fas fa-trash"></i>
-                                </a>
-                                <a class="btn btn-success btn-sm" href="{% url 'registrar_venta' producto.id %}" title="Vender">
-                                    <i class="fas fa-cash-register"></i>
                                 </a>
                             </div>
                         </td>
