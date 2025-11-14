@@ -25,4 +25,16 @@ class Usuario(models.Model):
     contrasena = models.CharField(max_length=100, verbose_name="Contraseña")
     rol = models.CharField(max_length=50, verbose_name="Rol del Usuario")
     correo = models.EmailField(verbose_name="Correo Electrónico")
+
+class Venta(models.Model):
+    producto = models.ForeignKey(Producto, on_delete = models.CASCADE, verbose_name="Producto")
+    cantidad = models.IntegerField(verbose_name="Cantidad Vendida")
+    fecha_venta = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Venta")
+    precio_venta = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Precio de Venta")
     
+    def __str__(self):
+        return f"{self.producto.nombreProducto} - {self.cantidad} unidades"
+    
+    class Meta:
+        verbose_name = "Venta"
+        verbose_name_plural = "Ventas"

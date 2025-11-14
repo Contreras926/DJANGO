@@ -1,0 +1,73 @@
+{% extends 'paginas/base.html' %}
+
+{% block titulo %}Registrar Venta{% endblock %}
+
+{% block contenido %}
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header bg-success text-white">
+            <h4><i class="fas fa-cash-register"></i> Registrar Venta - {{ producto.nombreProducto }}</h4>
+        </div>
+        <div class="card-body">
+            <!-- Información del producto -->
+            <div class="alert alert-info">
+                <h5><i class="fas fa-info-circle"></i> Información del Producto</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Descripción:</strong> {{ producto.descripcion }}</p>
+                        <p><strong>Categoría:</strong> {{ producto.categoria }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Precio Unitario:</strong> ${{ producto.precioUnitario|floatformat:2 }}</p>
+                        <p><strong>Stock Actual:</strong> <span class="badge bg-primary">{{ producto.stockActual }}</span></p>
+                        <p><strong>Stock Mínimo:</strong> <span class="badge bg-warning">{{ producto.stockMinimo }}</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulario de venta -->
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label for="cantidad" class="form-label">
+                        <strong><i class="fas fa-shopping-cart"></i> Cantidad a Vender:</strong>
+                    </label>
+                    <input type="number" 
+                            class="form-control form-control-lg" 
+                            id="cantidad" 
+                            name="cantidad" 
+                            min="1" 
+                            max="{{ producto.stockActual }}" 
+                            required
+                            placeholder="Ingrese la cantidad">
+                    <div class="form-text">
+                        <i class="fas fa-box"></i> Máximo disponible: <strong>{{ producto.stockActual }}</strong> unidades
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{% url 'productos' %}" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-arrow-left"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="fas fa-check-circle"></i> Registrar Venta
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Mensajes -->
+        {% if messages %}
+        <div class="card-footer">
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-{% if message.tags == 'error' %}exclamation-triangle{% else %}check-circle{% endif %}"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
