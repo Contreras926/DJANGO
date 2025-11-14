@@ -24,7 +24,6 @@
                             <th scope="col">PRECIO UNITARIO</th>
                             <th scope="col">STOCK MINIMO</th>
                             <th scope="col">STOCK ACTUAL</th>
-                            <th scope="col">ACCIONES</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -38,10 +37,32 @@
                             <td>{{ producto.precioUnitario}}</td>
                             <td>{{ producto.stockMinimo}}</td>
                             <td>{{ producto.stockActual}}</td>
+                            <td>${{ producto.precioUnitario|floatformat:2 }}</td>
                             <td>
                                 <a name=""id=""class="btn btn-info"href="{% url 'editar_producto' producto.id %}"role="button">Editar</a> 
                                 |
                                 <a name=""id=""class="btn btn-info"href="{% url 'eliminar_producto' producto.id %}"role="button">Borrar</a> 
+                            </td>
+
+                            <td>
+                                <span class="badge {% if producto.stockActual <= producto.stockMinimo %}bg-danger{% else %}bg-warning{% endif %}">
+                                    {{ producto.stockMinimo }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {% if producto.stockActual <= producto.stockMinimo %}bg-danger{% else %}bg-success{% endif %}">
+                                    {{ producto.stockActual }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a class="btn btn-info btn-sm" href="{% url 'editar_producto' producto.id %}" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a class="btn btn-danger btn-sm" href="{% url 'eliminar_producto' producto.id %}" title="Eliminar">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
                             </td>
                         </tr>
 
@@ -54,7 +75,9 @@
 
         </div>
         <div class="card-footer text-muted">Footer</div>
+        
+        <div class="card-footer text-muted">
+        Total de productos: {{ productos.count }}
+        </div>
     </div>
-    
-  
 {% endblock %}
