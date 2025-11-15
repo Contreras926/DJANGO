@@ -177,7 +177,7 @@ def reportes_ventas(request):
     
         # DATOS PARA GRÁFICA DE STOCK
         #     productos_stock = Producto.objects.all()
-    
+    productos_stock = Producto.objects.all()
     # Convertir a diccionario Python
     stock_data = dict()  # ← CREAR DICCIONARIO VACÍO
     for producto in productos_stock:
