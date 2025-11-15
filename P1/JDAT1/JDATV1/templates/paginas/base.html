@@ -118,11 +118,11 @@
       <div class="sidebar-logo">
         <img src="{% static 'imagenes/jdat.jpg' %}" alt="LOGO JDAT" >
       </div>
-      <a href="{% url 'inicio' %}" class="active">INICIO</a>
-      <a href="{% url 'crear_producto' %}">AGREGAR PRODUCTOS</a>
-      <a href="{% url 'productos' %}">MODIFICAR</a>
-      <a href="{% url 'productos' %}">ELIMINAR</a>
-      <a href="#">GENERAR REPORTES</a>
+      <a href="{% url 'inicio' %}" class="{% if request.resolver_match.url_name == 'inicio' %}active{% endif %}">INICIO</a>
+      <a href="{% url 'crear_producto' %}" class="{% if request.resolver_match.url_name == 'crear_producto' %}active{% endif %}">AGREGAR PRODUCTOS</a>
+      <a href="{% url 'productos' %}" class="{% if request.resolver_match.url_name == 'productos' %}active{% endif %}">MODIFICAR</a>
+      <a href="{% url 'productos' %}" class="{% if request.resolver_match.url_name == 'productos' and 'eliminar_producto' in request.path %}active{% endif %}">ELIMINAR</a>
+      <a href="{% url 'generar_reporte'%}" class="{% if request.resolver_match.url_name == 'generar_reporte' %}active{% endif %}">GENERAR REPORTES</a>
       <a href="{% url 'signup' %}">SALIR</a>
 
       <button id="toggleSidebar" class="sidebar-toggle-btn">&lt;</button>

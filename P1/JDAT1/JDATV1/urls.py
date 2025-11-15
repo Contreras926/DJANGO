@@ -14,4 +14,5 @@ urlpatterns = [
     path('ventas/registrar/<int:id>', views.registrar_venta, name='registrar_venta'),
     path('reportes/ventas', views.reportes_ventas, name='reportes_ventas'),
     path('paginas/logout/', views.logout_view, name='logout'),
+    path('reportes/generar/', views.generar_reporte, name='generar_reporte'),
 ]

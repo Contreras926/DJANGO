@@ -178,3 +178,6 @@ def logout_view(request):
     from django.contrib.auth import logout
     logout(request)
     return redirect('inicio')
+def generar_reporte(request):
+    productos = Producto.objects.all()
+    return render(request, 'reportes/generar.html', {'productos': productos})
