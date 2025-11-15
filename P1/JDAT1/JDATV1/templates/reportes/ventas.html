@@ -134,117 +134,173 @@
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
 <script>
-    // ✅ DATOS SEGUROS DESDE DJANGO
-    const ventasPorProducto = JSON.parse('{{ ventas_por_producto_json|safe }}');
-    const stockData = JSON.parse('{{ stock_data_json|safe }}');
+    // PARSEAR DATOS JSON DESDE DJANGO
+    console.log("=== INICIO DE DEBUG ===");
+    
+    let ventasPorProducto = {};
+    let stockData = {};
+    
+    try {
+        ventasPorProducto = JSON.parse('{{ ventas_por_producto_json|escapejs }}');
+        console.log("✅ Ventas por producto cargadas:", ventasPorProducto);
+    } catch (e) {
+        console.error("❌ Error al parsear ventas_por_producto:", e);
+    }
+    
+    try {
+        stockData = JSON.parse('{{ stock_data_json|escapejs }}');
+        console.log("✅ Stock data cargado:", stockData);
+    } catch (e) {
+        console.error("❌ Error al parsear stock_data:", e);
+    }
 
-    // GRÁFICA DE VENTAS POR PRODUCTO (Barras)
-    const ctxVentas = document.getElementById('ventasChart').getContext('2d');
-    new Chart(ctxVentas, {
-        type: 'bar',
-        data: {
-            labels: Object.keys(ventasPorProducto),
-            datasets: [{
-                label: 'Unidades Vendidas',
-                data: Object.values(ventasPorProducto),
-                backgroundColor: [
-                    'rgba(54, 162, 235, 0.7)',
-                    'rgba(75, 192, 192, 0.7)',
-                    'rgba(255, 206, 86, 0.7)',
-                    'rgba(255, 99, 132, 0.7)',
-                    'rgba(153, 102, 255, 0.7)'
-                ],
-                borderColor: [
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(153, 102, 255, 1)'
-                ],
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: false
+    // VERIFICAR QUE HAYA DATOS
+    if (Object.keys(ventasPorProducto).length === 0) {
+        console.warn("⚠️ No hay datos de ventas. Registra una venta primero.");
+    }
+
+    if (Object.keys(stockData).length === 0) {
+        console.warn("⚠️ No hay productos en stock.");
+    }
+
+    // GRÁFICA 1: VENTAS POR PRODUCTO (Barras)
+    const ctxVentas = document.getElementById('ventasChart');
+    
+    if (ctxVentas) {
+        if (Object.keys(ventasPorProducto).length > 0) {
+            new Chart(ctxVentas, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(ventasPorProducto),
+                    datasets: [{
+                        label: 'Unidades Vendidas',
+                        data: Object.values(ventasPorProducto),
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(153, 102, 255, 0.7)',
+                            'rgba(255, 159, 64, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
                 },
-                title: {
-                    display: true,
-                    text: 'Productos Más Vendidos',
-                    font: {
-                        size: 16
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Productos Más Vendidos',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        }
                     },
-                    title: {
-                        display: true,
-                        text: 'Unidades'
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Productos'
-                    }
-                }
-            }
-        }
-    });
-
-    // GRÁFICA DE STOCK ACTUAL (Pie)
-    const ctxStock = document.getElementById('stockChart').getContext('2d');
-    new Chart(ctxStock, {
-        type: 'pie',
-        data: {
-            labels: Object.keys(stockData),
-            datasets: [{
-                label: 'Stock Actual',
-                data: Object.values(stockData),
-                backgroundColor: [
-                    '#FF6384',
-                    '#36A2EB',
-                    '#FFCE56',
-                    '#4BC0C0',
-                    '#9966FF',
-                    '#FF9F40',
-                    '#FF6384',
-                    '#C9CBCF'
-                ],
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        padding: 15,
-                        font: {
-                            size: 11
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                precision: 0
+                            },
+                            title: {
+                                display: true,
+                                text: 'Unidades Vendidas'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Productos'
+                            }
                         }
                     }
+                }
+            });
+            console.log("✅ Gráfica de ventas creada exitosamente");
+        } else {
+            ctxVentas.parentElement.innerHTML = '<div class="alert alert-warning">No hay ventas registradas para mostrar en la gráfica.</div>';
+        }
+    } else {
+        console.error("❌ No se encontró el elemento canvas con id 'ventasChart'");
+    }
+
+    // GRÁFICA 2: STOCK ACTUAL (Circular)
+    const ctxStock = document.getElementById('stockChart');
+    
+    if (ctxStock) {
+        if (Object.keys(stockData).length > 0) {
+            new Chart(ctxStock, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(stockData),
+                    datasets: [{
+                        label: 'Stock Actual',
+                        data: Object.values(stockData),
+                        backgroundColor: [
+                            '#FF6384',
+                            '#36A2EB',
+                            '#FFCE56',
+                            '#4BC0C0',
+                            '#9966FF',
+                            '#FF9F40',
+                            '#FF6384',
+                            '#C9CBCF'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
                 },
-                title: {
-                    display: true,
-                    text: 'Distribución de Inventario',
-                    font: {
-                        size: 14
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Distribución de Inventario',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
                     }
                 }
-            }
+            });
+            console.log("✅ Gráfica de stock creada exitosamente");
+        } else {
+            ctxStock.parentElement.innerHTML = '<div class="alert alert-warning">No hay productos para mostrar en la gráfica.</div>';
         }
-    });
+    } else {
+        console.error("❌ No se encontró el elemento canvas con id 'stockChart'");
+    }
+    
+    console.log("=== FIN DE DEBUG ===");
 </script>
 {% endblock %}

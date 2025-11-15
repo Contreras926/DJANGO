@@ -131,13 +131,13 @@ def registrar_venta(request, id):
 
 #@login_required
 def reportes_ventas(request):
-    # Obtener parámetros de filtro
+    # Obtener filtros
     fecha_inicio = request.GET.get('fecha_inicio')
     fecha_fin = request.GET.get('fecha_fin')
     
     ventas = Venta.objects.select_related('producto').all()
     
-    # Aplicar filtros de fecha si existen
+    # Aplicar filtros de fecha
     if fecha_inicio:
         try:
             fecha_inicio_dt = datetime.strptime(fecha_inicio, '%Y-%m-%d')
@@ -152,7 +152,7 @@ def reportes_ventas(request):
         except ValueError:
             fecha_fin = None
     
-    # Cálculos para reportes usando agregación
+    # Cálculos
     ventas_stats = ventas.aggregate(
         total_ventas=Sum('cantidad'),
         ingresos_totales=Sum(F('cantidad') * F('precio_venta'), output_field=FloatField())
@@ -161,31 +161,46 @@ def reportes_ventas(request):
     total_ventas = ventas_stats['total_ventas'] or 0
     ingresos_totales = ventas_stats['ingresos_totales'] or 0.0
     
-    # Datos para gráfica de ventas por producto
+    # ============================================
+    # DATOS PARA GRÁFICA DE VENTAS POR PRODUCTO
+    # ============================================
     ventas_por_producto_qs = ventas.values('producto__nombreProducto').annotate(
         total_vendido=Sum('cantidad')
     ).order_by('-total_vendido')
     
-    ventas_por_producto = {
-        item['producto__nombreProducto']: item['total_vendido'] 
-        for item in ventas_por_producto_qs
-    }
+    # Convertir QuerySet a diccionario Python
+    ventas_por_producto = dict()  # ← CREAR DICCIONARIO VACÍO
+    for item in ventas_por_producto_qs:
+        producto_nombre = item['producto__nombreProducto']
+        cantidad_vendida = item['total_vendido']
+        ventas_por_producto[producto_nombre] = cantidad_vendida
     
-    # Datos para gráfica de stock
-    productos_stock = Producto.objects.all()
-    stock_data = {
-        producto.nombreProducto: producto.stockActual 
-        for producto in productos_stock
-    }
+        # DATOS PARA GRÁFICA DE STOCK
+        #     productos_stock = Producto.objects.all()
     
+    # Convertir a diccionario Python
+    stock_data = dict()  # ← CREAR DICCIONARIO VACÍO
+    for producto in productos_stock:
+        stock_data[producto.nombreProducto] = producto.stockActual
+    
+    # LISTA DE PRODUCTOS PARA LA TABLA
+
+    productos = Producto.objects.all()
+    
+    # CONVERTIR DICCIONARIOS A JSON
+    ventas_por_producto_json = json.dumps(ventas_por_producto)
+    stock_data_json = json.dumps(stock_data)
+    
+    # CONTEXT PARA EL TEMPLATE
     context = {
         'ventas': ventas,
-        'ventas_por_producto': ventas_por_producto,
-        'stock_data': stock_data,
+        'productos': productos,
         'total_ventas': total_ventas,
         'ingresos_totales': round(ingresos_totales, 2),
         'fecha_inicio': fecha_inicio or '',
         'fecha_fin': fecha_fin or '',
+        'ventas_por_producto_json': ventas_por_producto_json,
+        'stock_data_json': stock_data_json,
     }
     
     return render(request, 'reportes/ventas.html', context)
