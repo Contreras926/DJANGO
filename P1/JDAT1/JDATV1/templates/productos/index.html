@@ -6,6 +6,15 @@
         <div class="card-header">
             <a name=""id=""class="btn btn-primary"href="{% url 'crear_producto' %}"role="button">AGREGAR</a>
         </div>
+
+        {%if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} m-3" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}        
+
         <div class="card-body">
             <h4 class="card-title">PRODUCTOS</h4>
             

@@ -68,14 +68,16 @@ def es_empleado(user):
 
 
 # Create your views here.
-
+@login_required
 def inicio(request):
     return render (request, 'paginas/inicio.html')   
 
+@login_required
 def productos (request):
     productos = Producto.objects.all()
     return render (request, 'productos/index.html', {'productos': productos})
 
+@login_required
 def crear_producto (request):
     formulario = ProductoForm(request.POST or None)
     if formulario.is_valid():
@@ -83,6 +85,7 @@ def crear_producto (request):
         return redirect('productos')
     return render (request, 'productos/crear.html',{'formulario': formulario})
 
+@login_required
 def editar_producto (request, id):
     producto = Producto.objects.get(id=id)
     formulario = ProductoForm(request.POST or None, instance=producto)
@@ -91,16 +94,20 @@ def editar_producto (request, id):
         return redirect('productos')
     return render (request, 'productos/editar.html', {'formulario': formulario})
 
-@user_passes_test(es_admin)
+@login_required
 def eliminar_producto (request, id):
-    libro = Producto.objects.get(id=id)
-    libro.delete()
+    producto = Producto.objects.get(id=id)
+
+    if request.user.rol != 'admin':
+        messages.error(request, 'No tienes permiso para eliminar productos.')
+        return redirect('productos')
+
+    producto.delete()
+    messages.success(request, 'Producto eliminado exitosamente.')
     return redirect('productos')
 
 
-
-
-#@login_required
+@login_required
 @transaction.atomic
 def registrar_venta(request, id):
     producto = get_object_or_404(Producto, id=id)
@@ -139,7 +146,7 @@ def registrar_venta(request, id):
     
     return render(request, 'ventas/registrar.html', {'producto': producto})
 
-#@login_required
+@login_required
 def reportes_ventas(request):
     # Obtener parámetros de filtro
     fecha_inicio = request.GET.get('fecha_inicio')

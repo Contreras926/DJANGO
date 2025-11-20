@@ -1,8 +1,12 @@
 from django.urls import path
 from.import views
+from django.shortcuts import redirect
 
 urlpatterns = [
-    path ('',views.inicio, name='inicio'),
+    path('', lambda request: redirect('login'), name='root'),
+    
+
+    path ('paginas/inicio.html',views.inicio, name='inicio'),
     path('productos', views.productos,name='productos'),
     path('productos/crear', views.crear_producto,name='crear_producto'),
     path('productos/editar', views.editar_producto,name='editar_producto'),

@@ -91,6 +91,27 @@
         color: #fff !important;
       }
 
+      .user-info {
+        position: absolute;
+        bottom: 20px;
+        left: 0;
+        width: 100%;
+        padding: 15px;
+        text-align: center;
+        color: white;
+      }
+      .user-info img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 10px;
+        color: white;
+      }
+      .sidebar.collapsed .user-info {
+        display: none;
+      }
+
       /* Contenido */
       .content {
         margin-left: 250px;
@@ -123,6 +144,21 @@
       <a href="{% url 'productos' %}" class="{% if request.resolver_match.url_name == 'productos' %}active{% endif %}">MODIFICAR</a>
       <a href="{% url 'generar_reporte'%}" class="{% if request.resolver_match.url_name == 'generar_reporte' %}active{% endif %}">GENERAR REPORTES</a>
       <a href="{% url 'logout' %}">SALIR</a>
+
+      <div class="user-info">
+          <img src="{% static 'imagenes/usuario.png'%}" alt="User">
+          <div>
+            <strong>{{ request.user.username }}</strong>
+              <div style="font-size: 12px; opacity: 0.8;">
+                {% if request.user.is_staff %}
+                    Administrador
+                {% else %}
+                    Usuario
+                {% endif %}
+              </div>
+          </div>
+      </div>
+
 
       <button id="toggleSidebar" class="sidebar-toggle-btn">&lt;</button>
     </div>
