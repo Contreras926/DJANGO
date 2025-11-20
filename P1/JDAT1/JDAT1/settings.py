@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'JDAT1.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'django_db',
+        'NAME': 'pruebareg',
         'USER': 'root',
         'PASSWORD': '',
         'HOST': 'localhost',
@@ -103,6 +103,7 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+AUTH_USER_MODEL = 'JDATV1.Usuario'
 
 
 # Internationalization

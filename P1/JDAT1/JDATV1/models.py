@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
 # Create your models here.
 class Producto(models.Model):
@@ -18,14 +19,6 @@ class Producto(models.Model):
 def __str__(self):
         return self.nombreProducto
 
-class Usuario(models.Model):
-    id = models.AutoField(primary_key=True)
-    nombreUsuario = models.CharField(max_length=100, verbose_name="Nombre de Usuario")
-    apellidoUsuario = models.CharField(max_length=100, verbose_name="Apellido de Usuario")
-    contrasena = models.CharField(max_length=100, verbose_name="Contraseña")
-    rol = models.CharField(max_length=50, verbose_name="Rol del Usuario")
-    correo = models.EmailField(verbose_name="Correo Electrónico")
-
 class Venta(models.Model):
     producto = models.ForeignKey(Producto, on_delete = models.CASCADE, verbose_name="Producto")
     cantidad = models.IntegerField(verbose_name="Cantidad Vendida")
@@ -38,3 +31,53 @@ class Venta(models.Model):
     class Meta:
         verbose_name = "Venta"
         verbose_name_plural = "Ventas"
+
+
+class UsuarioManager(BaseUserManager):
+    def create_user(self, correo, nombreUsuario, apellidoUsuario, rol, password=None):
+        if not correo:
+            raise ValueError('El email debe ser proporcionado')
+        
+        usuario = self.model(
+            correo=self.normalize_email(correo),
+            nombreUsuario=nombreUsuario,
+            apellidoUsuario=apellidoUsuario,
+            rol=rol
+        )
+        usuario.set_password(password)
+        usuario.save(using=self._db)
+        return usuario
+    def create_superuser(self, correo, nombreUsuario, apellidoUsuario, password):
+        usuario = self.create_user(
+            correo,
+            nombreUsuario=nombreUsuario,
+            apellidoUsuario=apellidoUsuario,
+            rol='admin',
+            password=password
+        )
+        usuario.is_staff = True
+        usuario.is_superuser = True
+        usuario.save(using=self._db)
+        return usuario
+    
+ROLES = [
+    ('admin', 'Administrador'),
+    ('empleado', 'Empleado'),
+]
+
+class Usuario(AbstractBaseUser, PermissionsMixin):
+    nombreUsuario = models.CharField(verbose_name="Nombre", max_length=100)
+    apellidoUsuario = models.CharField(verbose_name="Apellido", max_length=100)
+    correo = models.EmailField(verbose_name="Correo Electrónico", max_length=255, unique=True)
+    rol = models.CharField(max_length=20, choices=ROLES, default='empleado', verbose_name="Rol del Usuario")
+
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+
+    objects = UsuarioManager()
+
+    USERNAME_FIELD = 'correo'
+    REQUIRED_FIELDS = ['nombreUsuario', 'apellidoUsuario']
+
+    def __str__(self):
+        return F"{self.nombreUsuario} {self.apellidoUsuario}"

@@ -2,8 +2,6 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from .models import Producto
 from .forms import ProductoForm
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth.models import User
 from django.contrib.auth import login, logout, authenticate
 from django.db import IntegrityError
 from django.shortcuts import render, redirect, get_object_or_404
@@ -14,6 +12,61 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from .models import Venta
+from .forms import RegistroForm, LoginForm
+from .models import Usuario
+from django.contrib.auth.decorators import login_required, user_passes_test
+
+
+# Registro de usuario
+
+
+def registro_view(request):
+    if request.method == 'POST':
+        form = RegistroForm(request.POST)
+        if form.is_valid():
+            usuario = form.save(commit=False)
+            usuario.set_password(form.cleaned_data['password'])
+            usuario.save()
+            messages.success(request, 'Registro exitoso. Ahora puedes iniciar sesión.')
+            return redirect('login')
+    else:
+        form = RegistroForm()
+    return render(request, 'reglog/registro.html', {'form': form})
+
+def login_view(request):
+    if request.method == 'POST':
+        form = LoginForm(request, data=request.POST)
+        if form.is_valid():
+            correo = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+
+            user = authenticate(request, correo=correo, password=password)
+            if user is not None:
+                login(request, user)
+                if user.rol == 'admin':
+                    return redirect('inicio')  # Redirigir a la página de administración
+                else:
+                    return redirect('inicio')  # Redirigir a la página de usuario estándar
+                
+            messages.error(request, 'Correo o contraseña incorrectos.')                
+    else:
+        form = LoginForm()
+    return render(request, 'reglog/login.html', {'form': form})
+
+def logout_view(request):
+    logout(request)
+    return redirect('login')
+
+def es_admin(user):
+    return user.rol == 'admin'
+
+def es_empleado(user):
+    return user.rol == 'empleado'
+               
+
+
+
+
 # Create your views here.
 
 def inicio(request):
@@ -38,40 +91,14 @@ def editar_producto (request, id):
         return redirect('productos')
     return render (request, 'productos/editar.html', {'formulario': formulario})
 
+@user_passes_test(es_admin)
 def eliminar_producto (request, id):
     libro = Producto.objects.get(id=id)
     libro.delete()
     return redirect('productos')
 
-def signup(request):
-    
-    if request.method == 'GET':
-        return render (request, 'paginas/signup.html' , {
-        'form': UserCreationForm
-        })
-    else:
-        if request.POST['password1'] == request.POST['password2']:    
-            try:
-                #Registrar usuario
-                user = User.objects.create_user(username=request.POST['usename'], password=request.
-                post['password1'])
-             
-                user.save()
-                login(request, user)
-                return redirect('inicio')
-            except IntegrityError:
-                return render (request, 'paginas/signup.html' , {
-                'form': UserCreationForm,
-                "error": 'Usuario ya existe'
-                })
-        return render (request, 'paginas/signup.html' , {
-            'form': UserCreationForm,
-            "error": HttpResponse('Contraseñas no coinciden')
-        })
-            
-def signout(request):
-    logout(request)
-    return redirect('inicio')                
+
+
 
 #@login_required
 @transaction.atomic
@@ -172,12 +199,6 @@ def reportes_ventas(request):
     }
     
     return render(request, 'reportes/ventas.html', context)
-
-# Función logout que falta (si no la tienes)
-def logout_view(request):
-    from django.contrib.auth import logout
-    logout(request)
-    return redirect('inicio')
 def generar_reporte(request):
     productos = Producto.objects.all()
     return render(request, 'reportes/generar.html', {'productos': productos})

@@ -8,11 +8,12 @@ urlpatterns = [
     path('productos/editar', views.editar_producto,name='editar_producto'),
     path('eliminar/<int:id>', views.eliminar_producto,name='eliminar_producto'),
     path('editar/<int:id>', views.editar_producto, name='editar_producto'), 
-    path('signup/', views.signup, name='signup'),
-    path('logout/', views.signout, name='logout'),
+    
+    path('reglog/registro/', views.registro_view, name='registro'),
+    path('reglog/login/', views.login_view, name='login'),
+    path('reglog/logout/', views.logout_view, name='logout'),
     
     path('ventas/registrar/<int:id>', views.registrar_venta, name='registrar_venta'),
     path('reportes/ventas', views.reportes_ventas, name='reportes_ventas'),
-    path('paginas/logout/', views.logout_view, name='logout'),
     path('reportes/generar/', views.generar_reporte, name='generar_reporte'),
 ]
