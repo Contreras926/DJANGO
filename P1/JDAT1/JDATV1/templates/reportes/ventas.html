@@ -134,31 +134,23 @@
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-<!-- Chart.js CDN -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
 <script>
+    // ============================================
     // PARSEAR DATOS JSON DESDE DJANGO
+    // ============================================
     console.log("=== INICIO DE DEBUG ===");
     
-    let ventasPorProducto = {};
-    let stockData = {};
+    //  ASIGNACIÓN DIRECTA - SIN DUPLICADOS
+    //Estos errores no afectan la funcionalidad 
+    var ventasPorProducto = {{ ventas_por_producto_json|safe }};
+    var stockData = {{ stock_data_json|safe }};
     
-    try {
-        ventasPorProducto = JSON.parse('{{ ventas_por_producto_json|escapejs }}');
-        console.log(" Ventas por producto cargadas:", ventasPorProducto);
-    } catch (e) {
-        console.error(" Error al parsear ventas_por_producto:", e);
-    }
-    
-    try {
-        stockData = JSON.parse('{{ stock_data_json|escapejs }}');
-        console.log(" Stock data cargado:", stockData);
-    } catch (e) {
-        console.error(" Error al parsear stock_data:", e);
-    }
+    console.log(" Ventas por producto cargadas:", ventasPorProducto);
+    console.log(" Stock data cargado:", stockData);
 
+    // ============================================
     // VERIFICAR QUE HAYA DATOS
+    // ============================================
     if (Object.keys(ventasPorProducto).length === 0) {
         console.warn(" No hay datos de ventas. Registra una venta primero.");
     }
@@ -167,7 +159,9 @@
         console.warn(" No hay productos en stock.");
     }
 
+    // ============================================
     // GRÁFICA 1: VENTAS POR PRODUCTO (Barras)
+    // ============================================
     const ctxVentas = document.getElementById('ventasChart');
     
     if (ctxVentas) {
@@ -237,13 +231,16 @@
             });
             console.log(" Gráfica de ventas creada exitosamente");
         } else {
-            ctxVentas.parentElement.innerHTML = '<div class="alert alert-warning">No hay ventas registradas para mostrar en la gráfica.</div>';
+            ctxVentas.parentElement.innerHTML = '<div class="alert alert-warning">⚠️ No hay ventas registradas para mostrar en la gráfica.</div>';
+            console.warn(" Canvas encontrado pero sin datos de ventas");
         }
     } else {
         console.error(" No se encontró el elemento canvas con id 'ventasChart'");
     }
 
+    // ============================================
     // GRÁFICA 2: STOCK ACTUAL (Circular)
+    // ============================================
     const ctxStock = document.getElementById('stockChart');
     
     if (ctxStock) {
@@ -295,7 +292,8 @@
             });
             console.log(" Gráfica de stock creada exitosamente");
         } else {
-            ctxStock.parentElement.innerHTML = '<div class="alert alert-warning">No hay productos para mostrar en la gráfica.</div>';
+            ctxStock.parentElement.innerHTML = '<div class="alert alert-warning">⚠️ No hay productos para mostrar en la gráfica.</div>';
+            console.warn(" Canvas encontrado pero sin datos de stock");
         }
     } else {
         console.error(" No se encontró el elemento canvas con id 'stockChart'");

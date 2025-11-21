@@ -136,7 +136,7 @@ def reportes_ventas(request):
     fecha_fin = request.GET.get('fecha_fin')
     
     ventas = Venta.objects.select_related('producto').all()
-    
+
     # Aplicar filtros de fecha
     if fecha_inicio:
         try:
@@ -169,22 +169,21 @@ def reportes_ventas(request):
     ).order_by('-total_vendido')
     
     # Convertir QuerySet a diccionario Python
-    ventas_por_producto = dict()  # ← CREAR DICCIONARIO VACÍO
+    ventas_por_producto = {}  # ← CREAR DICCIONARIO VACÍO
     for item in ventas_por_producto_qs:
         producto_nombre = item['producto__nombreProducto']
-        cantidad_vendida = item['total_vendido']
+        cantidad_vendida = item['total_vendido']  or 0
         ventas_por_producto[producto_nombre] = cantidad_vendida
-    
-        # DATOS PARA GRÁFICA DE STOCK
-        #     productos_stock = Producto.objects.all()
-    productos_stock = Producto.objects.all()
-    # Convertir a diccionario Python
-    stock_data = dict()  # ← CREAR DICCIONARIO VACÍO
-    for producto in productos_stock:
+    # ============================================
+    # DATOS PARA GRÁFICA DE STOCK
+    # ============================================
+    stock_data = {}
+    for producto in Producto.objects.all():
         stock_data[producto.nombreProducto] = producto.stockActual
     
+    # ============================================
     # LISTA DE PRODUCTOS PARA LA TABLA
-
+    # ============================================
     productos = Producto.objects.all()
     
     # CONVERTIR DICCIONARIOS A JSON
@@ -202,6 +201,9 @@ def reportes_ventas(request):
         'ventas_por_producto_json': ventas_por_producto_json,
         'stock_data_json': stock_data_json,
     }
+    
+    print("DEBUG - Ventas por producto:", ventas_por_producto)
+    print("DEBUG - Stock data:", stock_data)
     
     return render(request, 'reportes/ventas.html', context)
 
