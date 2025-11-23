@@ -161,9 +161,7 @@ def reportes_ventas(request):
     total_ventas = ventas_stats['total_ventas'] or 0
     ingresos_totales = ventas_stats['ingresos_totales'] or 0.0
     
-    # ============================================
     # DATOS PARA GRÁFICA DE VENTAS POR PRODUCTO
-    # ============================================
     ventas_por_producto_qs = ventas.values('producto__nombreProducto').annotate(
         total_vendido=Sum('cantidad')
     ).order_by('-total_vendido')
@@ -174,16 +172,12 @@ def reportes_ventas(request):
         producto_nombre = item['producto__nombreProducto']
         cantidad_vendida = item['total_vendido']  or 0
         ventas_por_producto[producto_nombre] = cantidad_vendida
-    # ============================================
     # DATOS PARA GRÁFICA DE STOCK
-    # ============================================
     stock_data = {}
     for producto in Producto.objects.all():
         stock_data[producto.nombreProducto] = producto.stockActual
     
-    # ============================================
     # LISTA DE PRODUCTOS PARA LA TABLA
-    # ============================================
     productos = Producto.objects.all()
     
     # CONVERTIR DICCIONARIOS A JSON
