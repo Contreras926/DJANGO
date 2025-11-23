@@ -13,7 +13,18 @@
                     {{ message }}
                 </div>
             {% endfor %}
-        {% endif %}        
+        {% endif %}
+        
+        {% if alertas_stock %}
+        <div class="alert alert-warning">
+            <strong>¡Atención!</strong> Los siguientes productos tienen bajo stock:
+            <ul>
+                {% for p in alertas_stock %}
+                    <li> {{ p.nombreProducto }} - Stock: <strong>{{ p.stockActual }}</strong></li>               
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
 
         <div class="card-body">
             <h4 class="card-title">PRODUCTOS</h4>
@@ -39,7 +50,14 @@
                     <tbody>
                         {% for producto in productos %}
 
-                        <tr >
+                        <tr class="
+                        {% if producto.stockActual <= 1 %}
+                            class = "table-danger"
+                        {% elif producto.stockActual <= 5 %}
+                            class = "table-warning"
+                        {% endif %}
+                        " >
+
                             <td>{{ producto.id}}</td>
                             <td>{{ producto.nombreProducto}}</td>
                             <td>{{ producto.descripcion}}</td>

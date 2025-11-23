@@ -75,7 +75,14 @@ def inicio(request):
 @login_required
 def productos (request):
     productos = Producto.objects.all()
-    return render (request, 'productos/index.html', {'productos': productos})
+
+    alertas_stock = productos.filter(stockActual__lt=5)
+
+
+    return render (request, 'productos/index.html', {
+        'productos': productos,
+        'alertas_stock': alertas_stock
+        })
 
 @login_required
 def crear_producto (request):
@@ -92,6 +99,8 @@ def editar_producto (request, id):
     if formulario.is_valid() and request.method == 'POST':
         formulario.save()
         return redirect('productos')
+    if producto.stockActual <= 5:
+        messages.warning(request, 'Advertencia: El stock actual es bajo.')
     return render (request, 'productos/editar.html', {'formulario': formulario})
 
 @login_required
@@ -151,7 +160,10 @@ def reportes_ventas(request):
     # Obtener parámetros de filtro
     fecha_inicio = request.GET.get('fecha_inicio')
     fecha_fin = request.GET.get('fecha_fin')
-    
+    categoria = request.GET.get('categoria')
+
+    categorias = Producto.objects.values_list('categoria', flat=True).distinct()
+
     ventas = Venta.objects.select_related('producto').all()
     
     # Aplicar filtros de fecha si existen
@@ -168,7 +180,8 @@ def reportes_ventas(request):
             ventas = ventas.filter(fecha_venta__date__lte=fecha_fin_dt)
         except ValueError:
             fecha_fin = None
-    
+    if categoria:
+        ventas = ventas.filter(producto__categoria=categoria)
     # Cálculos para reportes usando agregación
     ventas_stats = ventas.aggregate(
         total_ventas=Sum('cantidad'),
@@ -203,6 +216,8 @@ def reportes_ventas(request):
         'ingresos_totales': round(ingresos_totales, 2),
         'fecha_inicio': fecha_inicio or '',
         'fecha_fin': fecha_fin or '',
+        'categoria': categoria or '',
+        'categorias': categorias,
     }
     
     return render(request, 'reportes/ventas.html', context)

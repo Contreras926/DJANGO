@@ -68,7 +68,7 @@ ROLES = [
 class Usuario(AbstractBaseUser, PermissionsMixin):
     nombreUsuario = models.CharField(verbose_name="Nombre", max_length=100)
     apellidoUsuario = models.CharField(verbose_name="Apellido", max_length=100)
-    correo = models.EmailField(verbose_name="Correo Electrónico", max_length=255, unique=True)
+    correo = models.EmailField(verbose_name="Correo", max_length=255, unique=True)
     rol = models.CharField(max_length=20, choices=ROLES, default='empleado', verbose_name="Rol del Usuario")
 
     is_active = models.BooleanField(default=True)
