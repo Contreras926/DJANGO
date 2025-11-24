@@ -59,7 +59,7 @@
                 </div>
             </div>
 
-            <!-- GRÁFICAS -->
+            <!-- GRÁFICAS CON PLOTLY -->
             <div class="row mb-4">
                 <div class="col-md-8">
                     <div class="card shadow">
@@ -67,7 +67,7 @@
                             <h5><i class="fas fa-chart-bar"></i> Ventas por Producto</h5>
                         </div>
                         <div class="card-body">
-                            <canvas id="ventasChart" height="350"></canvas>
+                            {{ grafica_ventas|safe }}
                         </div>
                     </div>
                 </div>
@@ -77,7 +77,7 @@
                             <h5><i class="fas fa-chart-pie"></i> Stock Actual</h5>
                         </div>
                         <div class="card-body">
-                            <canvas id="stockChart" height="350"></canvas>
+                            {{ grafica_stock|safe }}
                         </div>
                     </div>
                 </div>
@@ -131,209 +131,6 @@
     </div>
 </div>
 
-<!-- Chart.js CDN -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
-<style>
-    /* Asegurar dimensiones mínimas para los canvas */
-    #ventasChart {
-        min-height: 300px !important;
-    }
-    
-    #stockChart {
-        min-height: 300px !important;
-    }
-    
-    .card-body canvas {
-        display: block !important;
-    }
-</style>
-
-<script>
-    // ESPERAR A QUE EL DOM ESTÉ COMPLETAMENTE CARGADO
-
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log("=== INICIO DE DEBUG ===");
-        
-        // Verificar que Chart.js esté cargado
-        if (typeof Chart === 'undefined') {
-            console.error(" Chart.js NO está cargado");
-            alert("Error: Chart.js no se cargó correctamente. Verifica tu conexión a internet.");
-            return;
-        }
-        console.log(" Chart.js cargado, versión:", Chart.version);
-        
-        // Asignación de datos desde Django
-        var ventasPorProducto = {{ ventas_por_producto_json|safe }};
-        var stockData = {{ stock_data_json|safe }};
-        
-        console.log(" Ventas por producto:", ventasPorProducto);
-        console.log(" Stock data:", stockData);
-
-        // Verificar que haya datos
-        if (Object.keys(ventasPorProducto).length === 0) {
-            console.warn(" No hay datos de ventas");
-        }
-
-        if (Object.keys(stockData).length === 0) {
-            console.warn(" No hay productos en stock");
-        }
-
-        // GRÁFICA 1: VENTAS POR PRODUCTO (Barras)
-        const ctxVentas = document.getElementById('ventasChart');
-        
-        if (!ctxVentas) {
-            console.error(" Canvas 'ventasChart' NO encontrado");
-        } else {
-            console.log(" Canvas 'ventasChart' encontrado");
-            console.log("   Dimensiones:", ctxVentas.offsetWidth, "x", ctxVentas.offsetHeight);
-            
-            if (Object.keys(ventasPorProducto).length > 0) {
-                try {
-                    const chartVentas = new Chart(ctxVentas, {
-                        type: 'bar',
-                        data: {
-                            labels: Object.keys(ventasPorProducto),
-                            datasets: [{
-                                label: 'Unidades Vendidas',
-                                data: Object.values(ventasPorProducto),
-                                backgroundColor: [
-                                    'rgba(54, 162, 235, 0.7)',
-                                    'rgba(75, 192, 192, 0.7)',
-                                    'rgba(255, 206, 86, 0.7)',
-                                    'rgba(255, 99, 132, 0.7)',
-                                    'rgba(153, 102, 255, 0.7)',
-                                    'rgba(255, 159, 64, 0.7)'
-                                ],
-                                borderColor: [
-                                    'rgba(54, 162, 235, 1)',
-                                    'rgba(75, 192, 192, 1)',
-                                    'rgba(255, 206, 86, 1)',
-                                    'rgba(255, 99, 132, 1)',
-                                    'rgba(153, 102, 255, 1)',
-                                    'rgba(255, 159, 64, 1)'
-                                ],
-                                borderWidth: 2
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: true,
-                            plugins: {
-                                legend: {
-                                    display: false
-                                },
-                                title: {
-                                    display: true,
-                                    text: 'Productos Más Vendidos',
-                                    font: {
-                                        size: 16,
-                                        weight: 'bold'
-                                    }
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: {
-                                        stepSize: 1,
-                                        precision: 0
-                                    },
-                                    title: {
-                                        display: true,
-                                        text: 'Unidades Vendidas'
-                                    }
-                                },
-                                x: {
-                                    title: {
-                                        display: true,
-                                        text: 'Productos'
-                                    }
-                                }
-                            }
-                        }
-                    });
-                    console.log(" Gráfica de ventas CREADA exitosamente");
-                    console.log("   ID del chart:", chartVentas.id);
-                } catch (error) {
-                    console.error(" Error al crear gráfica de ventas:", error);
-                    ctxVentas.parentElement.innerHTML = '<div class="alert alert-danger">Error al crear la gráfica: ' + error.message + '</div>';
-                }
-            } else {
-                ctxVentas.parentElement.innerHTML = '<div class="alert alert-warning"> No hay ventas registradas para mostrar.</div>';
-                console.warn(" Sin datos de ventas para graficar");
-            }
-        }
-
-        // GRÁFICA 2: STOCK ACTUAL (Circular)
-        const ctxStock = document.getElementById('stockChart');
-        
-        if (!ctxStock) {
-            console.error(" Canvas 'stockChart' NO encontrado");
-        } else {
-            console.log(" Canvas 'stockChart' encontrado");
-            console.log("   Dimensiones:", ctxStock.offsetWidth, "x", ctxStock.offsetHeight);
-            
-            if (Object.keys(stockData).length > 0) {
-                try {
-                    const chartStock = new Chart(ctxStock, {
-                        type: 'pie',
-                        data: {
-                            labels: Object.keys(stockData),
-                            datasets: [{
-                                label: 'Stock Actual',
-                                data: Object.values(stockData),
-                                backgroundColor: [
-                                    '#FF6384',
-                                    '#36A2EB',
-                                    '#FFCE56',
-                                    '#4BC0C0',
-                                    '#9966FF',
-                                    '#FF9F40',
-                                    '#FF6384',
-                                    '#C9CBCF'
-                                ],
-                                borderWidth: 2,
-                                borderColor: '#fff'
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: true,
-                            plugins: {
-                                legend: {
-                                    position: 'bottom',
-                                    labels: {
-                                        padding: 15,
-                                        font: {
-                                            size: 11
-                                        }
-                                    }
-                                },
-                                title: {
-                                    display: true,
-                                    text: 'Distribución de Inventario',
-                                    font: {
-                                        size: 14,
-                                        weight: 'bold'
-                                    }
-                                }
-                            }
-                        }
-                    });
-                    console.log(" Gráfica de stock CREADA exitosamente");
-                    console.log("   ID del chart:", chartStock.id);
-                } catch (error) {
-                    console.error(" Error al crear gráfica de stock:", error);
-                    ctxStock.parentElement.innerHTML = '<div class="alert alert-danger">Error al crear la gráfica: ' + error.message + '</div>';
-                }
-            } else {
-                ctxStock.parentElement.innerHTML = '<div class="alert alert-warning"> No hay productos para mostrar.</div>';
-                console.warn(" Sin datos de stock para graficar");
-            }
-        }
-        
-        console.log("=== FIN DE DEBUG ===");
-    });
-</script>
+<!-- Plotly CDN (solo se carga una vez) -->
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
 {% endblock %}

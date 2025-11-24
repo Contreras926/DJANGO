@@ -1,10 +1,10 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from .models import Producto
+from .models import Producto, Venta
 from .forms import ProductoForm
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, logout
 from django.db import IntegrityError
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -13,43 +13,45 @@ from datetime import datetime
 import json
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from .models import Venta
 
+# Importaciones de Plotly
+import plotly.graph_objects as go
+import plotly.express as px
+from plotly.offline import plot
 
 
 # Create your views here.
 
 def inicio(request):
-    return render (request, 'paginas/inicio.html') 
+    return render(request, 'paginas/inicio.html') 
 
-def nosotros (request):
-    return render (request, 'paginas/nosotros.html')     
+def nosotros(request):
+    return render(request, 'paginas/nosotros.html')     
 
-def productos (request):
+def productos(request):
     productos = Producto.objects.all()
-    return render (request, 'productos/index.html', {'productos': productos})
+    return render(request, 'productos/index.html', {'productos': productos})
 
-def crear_producto (request):
+def crear_producto(request):
     formulario = ProductoForm(request.POST or None)
     if formulario.is_valid():
         formulario.save()
         return redirect('productos')
-    return render (request, 'productos/crear.html',{'formulario': formulario})
+    return render(request, 'productos/crear.html', {'formulario': formulario})
 
-def editar_producto (request, id):
+def editar_producto(request, id):
     producto = Producto.objects.get(id=id)
     formulario = ProductoForm(request.POST or None, instance=producto)
     if formulario.is_valid() and request.method == 'POST':
         formulario.save()
         return redirect('productos')
-    return render (request, 'productos/editar.html', {'formulario': formulario})
+    return render(request, 'productos/editar.html', {'formulario': formulario})
 
-def eliminar_producto (request, id):
+def eliminar_producto(request, id):
     libro = Producto.objects.get(id=id)
     libro.delete()
     return redirect('productos')
 
-# Registro de usuario
 def register(request):
     if request.method == 'GET':
         return render(request, 'signup.html', {
@@ -89,8 +91,6 @@ def signin(request):
             login(request, user)
             return redirect('inicio')
 
-
-#@login_required
 @transaction.atomic
 def registrar_venta(request, id):
     producto = get_object_or_404(Producto, id=id)
@@ -106,21 +106,18 @@ def registrar_venta(request, id):
             messages.error(request, 'La cantidad debe ser mayor a cero')
             return render(request, 'ventas/registrar.html', {'producto': producto})
         
-        # Bloquear el producto para evitar condiciones de carrera
         producto = Producto.objects.select_for_update().get(id=id)
         
         if cantidad > producto.stockActual:
             messages.error(request, f'Stock insuficiente. Stock actual: {producto.stockActual}')
             return render(request, 'ventas/registrar.html', {'producto': producto})
         
-        # Registrar la venta - USANDO preciolmitario (tu campo actual)
         Venta.objects.create(
             producto=producto,
             cantidad=cantidad,
-            precio_venta=producto.precioUnitario  # ← USA preciolmitario
+            precio_venta=producto.precioUnitario
         )
         
-        # Actualizar stock
         producto.stockActual -= cantidad
         producto.save()
         
@@ -129,15 +126,149 @@ def registrar_venta(request, id):
     
     return render(request, 'ventas/registrar.html', {'producto': producto})
 
-#@login_required
+
+# FUNCIONES GENERADORAS DE GRÁFICAS PLOTLY
+
+def generar_grafica_ventas_plotly(ventas_por_producto):
+    """
+    Genera gráfica de barras interactiva con Plotly
+    
+    Args:
+        ventas_por_producto (dict): {nombre_producto: cantidad}
+    
+    Returns:
+        str: HTML embebible de la gráfica
+    """
+    if not ventas_por_producto:
+        return '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> No hay ventas registradas para mostrar.</div>'
+    
+    productos = list(ventas_por_producto.keys())
+    cantidades = list(ventas_por_producto.values())
+    
+    fig = go.Figure(data=[
+        go.Bar(
+            x=productos,
+            y=cantidades,
+            marker=dict(
+                color=cantidades,
+                colorscale='Blues',
+                line=dict(color='rgb(8,48,107)', width=2)
+            ),
+            text=cantidades,
+            textposition='auto',
+            hovertemplate='<b>%{x}</b><br>Unidades: %{y}<extra></extra>'
+        )
+    ])
+    
+    fig.update_layout(
+        title={
+            'text': 'Productos Más Vendidos',
+            'font': {'size': 20, 'family': 'Arial, sans-serif', 'color': '#2c3e50'},
+            'x': 0.5,
+            'xanchor': 'center'
+        },
+        xaxis=dict(
+            title='Productos',
+            tickangle=-45,
+            showgrid=False
+        ),
+        yaxis=dict(
+            title='Unidades Vendidas',
+            showgrid=True,
+            gridcolor='rgba(0,0,0,0.1)'
+        ),
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=50, r=50, t=80, b=100),
+        height=400,
+        hovermode='x unified'
+    )
+    
+    config = {
+        'displayModeBar': True,
+        'displaylogo': False,
+        'modeBarButtonsToRemove': ['select2d', 'lasso2d'],
+        'responsive': True
+    }
+    
+    # CORREGIDO: include_plotlyjs=False
+    plot_html = plot(fig, output_type='div', include_plotlyjs=False, config=config)
+    return plot_html
+
+
+def generar_grafica_stock_plotly(stock_data):
+    """
+    Genera gráfica circular interactiva con Plotly
+    
+    Args:
+        stock_data (dict): {nombre_producto: cantidad_stock}
+    
+    Returns:
+        str: HTML embebible de la gráfica
+    """
+    if not stock_data:
+        return '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> No hay productos para mostrar.</div>'
+    
+    productos = list(stock_data.keys())
+    cantidades = list(stock_data.values())
+    
+    fig = go.Figure(data=[
+        go.Pie(
+            labels=productos,
+            values=cantidades,
+            hole=0.3,
+            marker=dict(
+                colors=px.colors.qualitative.Set3,
+                line=dict(color='white', width=2)
+            ),
+            textinfo='label+percent',
+            textposition='inside',
+            hovertemplate='<b>%{label}</b><br>Stock: %{value}<br>%{percent}<extra></extra>'
+        )
+    ])
+    
+    fig.update_layout(
+        title={
+            'text': 'Distribución de Inventario',
+            'font': {'size': 18, 'family': 'Arial, sans-serif', 'color': '#2c3e50'},
+            'x': 0.5,
+            'xanchor': 'center'
+        },
+        showlegend=True,
+        legend=dict(
+            orientation='h',
+            yanchor='bottom',
+            y=-0.2,
+            xanchor='center',
+            x=0.5
+        ),
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=20, r=20, t=80, b=80),
+        height=400
+    )
+    
+    config = {
+        'displayModeBar': True,
+        'displaylogo': False,
+        'modeBarButtonsToRemove': ['select2d', 'lasso2d'],
+        'responsive': True
+    }
+    
+    #  CORREGIDO: include_plotlyjs=False
+    plot_html = plot(fig, output_type='div', include_plotlyjs=False, config=config)
+    return plot_html
+
+
 def reportes_ventas(request):
-    # Obtener filtros
+    """
+    Vista de reportes con gráficas Plotly
+    """
     fecha_inicio = request.GET.get('fecha_inicio')
     fecha_fin = request.GET.get('fecha_fin')
     
     ventas = Venta.objects.select_related('producto').all()
 
-    # Aplicar filtros de fecha
     if fecha_inicio:
         try:
             fecha_inicio_dt = datetime.strptime(fecha_inicio, '%Y-%m-%d')
@@ -152,7 +283,6 @@ def reportes_ventas(request):
         except ValueError:
             fecha_fin = None
     
-    # Cálculos
     ventas_stats = ventas.aggregate(
         total_ventas=Sum('cantidad'),
         ingresos_totales=Sum(F('cantidad') * F('precio_venta'), output_field=FloatField())
@@ -161,30 +291,26 @@ def reportes_ventas(request):
     total_ventas = ventas_stats['total_ventas'] or 0
     ingresos_totales = ventas_stats['ingresos_totales'] or 0.0
     
-    # DATOS PARA GRÁFICA DE VENTAS POR PRODUCTO
     ventas_por_producto_qs = ventas.values('producto__nombreProducto').annotate(
         total_vendido=Sum('cantidad')
     ).order_by('-total_vendido')
     
-    # Convertir QuerySet a diccionario Python
-    ventas_por_producto = {}  # ← CREAR DICCIONARIO VACÍO
+    ventas_por_producto = {}
     for item in ventas_por_producto_qs:
         producto_nombre = item['producto__nombreProducto']
-        cantidad_vendida = item['total_vendido']  or 0
+        cantidad_vendida = item['total_vendido'] or 0
         ventas_por_producto[producto_nombre] = cantidad_vendida
-    # DATOS PARA GRÁFICA DE STOCK
+    
     stock_data = {}
     for producto in Producto.objects.all():
         stock_data[producto.nombreProducto] = producto.stockActual
     
-    # LISTA DE PRODUCTOS PARA LA TABLA
     productos = Producto.objects.all()
     
-    # CONVERTIR DICCIONARIOS A JSON
-    ventas_por_producto_json = json.dumps(ventas_por_producto)
-    stock_data_json = json.dumps(stock_data)
+    # Generar gráficas con Plotly
+    grafica_ventas_html = generar_grafica_ventas_plotly(ventas_por_producto)
+    grafica_stock_html = generar_grafica_stock_plotly(stock_data)
     
-    # CONTEXT PARA EL TEMPLATE
     context = {
         'ventas': ventas,
         'productos': productos,
@@ -192,8 +318,8 @@ def reportes_ventas(request):
         'ingresos_totales': round(ingresos_totales, 2),
         'fecha_inicio': fecha_inicio or '',
         'fecha_fin': fecha_fin or '',
-        'ventas_por_producto_json': ventas_por_producto_json,
-        'stock_data_json': stock_data_json,
+        'grafica_ventas': grafica_ventas_html,
+        'grafica_stock': grafica_stock_html,
     }
     
     print("DEBUG - Ventas por producto:", ventas_por_producto)
@@ -201,8 +327,7 @@ def reportes_ventas(request):
     
     return render(request, 'reportes/ventas.html', context)
 
-# Función logout que falta (si no la tienes)
+
 def logout_view(request):
-    from django.contrib.auth import logout
     logout(request)
     return redirect('inicio')
