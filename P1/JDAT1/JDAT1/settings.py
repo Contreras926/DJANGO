@@ -25,7 +25,15 @@ SECRET_KEY = 'django-insecure-brj!e7v4n-suznryf8h8sbrs49@w9%_r#2_6jqqmat@ai4eon1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    "hugest-emerson-aloofly.ngrok-free.dev",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://hugest-emerson-aloofly.ngrok-free.dev",
+]
 
 
 # Application definition
