@@ -15,6 +15,7 @@ from .models import Venta
 from .forms import RegistroForm, LoginForm
 from .models import Usuario
 from django.contrib.auth.decorators import login_required, user_passes_test
+import csv
 
 
 # Registro de usuario
@@ -67,10 +68,25 @@ def es_empleado(user):
 
 
 
-# Create your views here.
+# INICIO PAGINA
 @login_required
 def inicio(request):
-    return render (request, 'paginas/inicio.html')   
+    ventas = Venta.objects.values('producto__nombreProducto').annotate(
+        total_vendido=Sum('cantidad')
+    )
+
+    ventas_por_producto = {
+        V['producto__nombreProducto']: V['total_vendido'] for V in ventas
+    }
+
+    productos = Producto.objects.all()
+    stock_data = {p.nombreProducto: p.stockActual for p in productos}
+
+
+    return render (request, 'paginas/inicio.html',{
+        'ventas_por_producto': ventas_por_producto,
+        'stock_data': stock_data,
+    })   
 
 @login_required
 def productos (request):
@@ -84,6 +100,7 @@ def productos (request):
         'alertas_stock': alertas_stock
         })
 
+    # CRUD PRODUCTOS
 @login_required
 def crear_producto (request):
     formulario = ProductoForm(request.POST or None)
@@ -116,6 +133,7 @@ def eliminar_producto (request, id):
     return redirect('productos')
 
 
+#REPORTES
 @login_required
 @transaction.atomic
 def registrar_venta(request, id):
@@ -224,3 +242,34 @@ def reportes_ventas(request):
 def generar_reporte(request):
     productos = Producto.objects.all()
     return render(request, 'reportes/generar.html', {'productos': productos})
+
+#EXPORTAR CSV
+
+@login_required
+def exportar_csv (request):
+
+    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_fin = request.GET.get('fecha_fin')
+
+    ventas = Venta.objects.select_related('producto').all()
+
+    if fecha_inicio:
+        ventas = ventas.filter(fecha_venta__date__gte=fecha_inicio)
+    if fecha_fin:
+        ventas = ventas.filter(fecha_venta__date__lte=fecha_fin)
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="reporte_ventas.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Producto', 'Cantidad', 'Precio de Venta', 'Total', 'Fecha de Venta'])
+
+    for v in ventas:
+        writer.writerow([
+            v.producto.nombreProducto,
+            v.cantidad,
+            v.precio_venta,
+            v.cantidad * v.precio_venta,
+            v.fecha_venta.strftime('$d/$m/%Y %H:%M')
+        ])
+    return response

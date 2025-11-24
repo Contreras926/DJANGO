@@ -1,5 +1,7 @@
 {% extends 'paginas/base.html' %}
 
+{% load static %}
+
 {% block titulo %}Reportes de Ventas{% endblock %}
 
 {% block contenido %}
@@ -15,18 +17,6 @@
                 <div class="card-header bg-light">
                     <h5><i class="fas fa-filter"></i> FILTROS </h5>
                 </div>
-
-                <div class="col-md-4">
-                    <label class="form-label"><i class="fas fa-tags"></i> CATEGORIA:</label>
-                    <select class="form-control" name="categoria">
-                        <option value="">-- Todas las Categorías --</option>
-                        {% for cat in categorias %}
-                            <option value="{{ cat }}" {% if categoria == cat %}selected{% endif %}>
-                                {{ cat }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                 </div>
 
                 <div class="card-body">
                     <form method="get" class="row g-3">
@@ -139,53 +129,25 @@
             <a href="{% url 'generar_reporte' %}" class="btn btn-primary">
                 <i class="fas fa-arrow-left"></i> Volver
             </a>
+            <a href="{% url 'exportar_csv' %}?fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}" 
+                class="btn btn-success">
+                <i class="fas fa-file-csv"></i> Exportar CSV
+            </a>
         </div>
     </div>
 </div>
 
 <!-- Chart.js CDN -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/graficas.js' %}"></script>
+
 
 <script>
-    const ventasPorProducto = {{ ventas_por_producto_json|safe }};
-    const stockData = {{ stock_data_json|safe }};
-    
-    
-    console.log("Ventas:", ventasPorProducto);
-    console.log("Stock:", stockData);
-
-    // Datos seguros desde Django
-
-
-    // GRÁFICA DE STOCK ACTUAL (Pie)
-    const ctxStock = document.getElementById('stockChart');
-
-    new Chart(ctxStock, {
-        type: 'pie',
-        data: {
-            labels: Object.keys(stockData),
-            datasets: [{
-                label: 'Stock Actual',
-                data: Object.values(stockData),
-                backgroundColor: [
-                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
-                    '#9966FF', '#FF9F40', '#C9CBCF'
-                ],
-                hoverOffset: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: { position: 'bottom' },
-                title: {
-                    display: true,
-                    text: 'Distribución de Inventario'
-                }
-            }
-        }
-    });
+    cargarGraficas(
+        {{ ventas_por_producto|safe }},
+        {{ stock_data|safe }}
+    );
 </script>
+
 
 {% endblock %}
