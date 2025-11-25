@@ -1,5 +1,3 @@
-# Ubicación: JDATV1/context_processors.py
-
 def roles_context(request):
     """
     Inyecta variables booleanas 'is_admin' y 'is_empleado' en los templates.
