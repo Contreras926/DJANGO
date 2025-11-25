@@ -18,63 +18,40 @@ from .models import MovimientoInventario
 from django.contrib.auth.decorators import login_required, user_passes_test
 from functools import wraps
 
-# 1. SECCIÓN DE DECORADORES Y AYUDAS (Antes en decorators.py)
+
+# 1. SECCIÓN DE DECORADORES Y AYUDAS (Única lógica de seguridad aquí)
 
 def rol_requerido(roles_permitidos):
-    """
-    Decorador para restringir acceso.
-    """
+    """Decorador maestro que verifica el rol."""
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):
             if not request.user.is_authenticated:
-                return redirect('login')
+                return redirect('login') 
             
-            # Normalizar a lista
             roles = [roles_permitidos] if isinstance(roles_permitidos, str) else roles_permitidos
             
-            # Verificar rol (asumiendo campo 'rol' en modelo Usuario)
             if request.user.rol not in roles:
-                messages.error(request, '⛔ Acceso denegado.')
+                messages.error(request, ' Acceso denegado: No tienes permisos.')
                 return redirect('inicio')
             
             return view_func(request, *args, **kwargs)
         return _wrapped_view
     return decorator
 
-# Atajos para usar abajo en las vistas
+# Atajos
 admin_required = rol_requerido('admin')
 empleado_required = rol_requerido('empleado')
 admin_o_empleado = rol_requerido(['admin', 'empleado'])
 
-# 2. SECCIÓN CONTEXT PROCESSOR (Antes en context_processors.py)
-
-def roles_context(request):
-    """
-    Inyecta variables globales a los templates.
-    """
-    if request.user.is_authenticated:
-        return {
-            'es_admin': request.user.rol == 'admin',
-            'es_empleado': request.user.rol == 'empleado'
-        }
-    return {'es_admin': False, 'es_empleado': False}
-
-# 3. SECCIÓN DE VISTAS (Tus funciones normales)
+# 2. SECCIÓN DE VISTAS 
 
 @login_required
-@admin_required  # Usando el decorador definido arriba
+@admin_required
 def eliminar_producto(request, id):
-    # Lógica de eliminar
+    # Tu código para eliminar...
     messages.success(request, 'Producto eliminado')
-    return redirect('inicio')
-
-@login_required
-@admin_o_empleado
-def ver_panel(request):
-    return render(request, 'panel.html')
-
-
+    return redirect('productos')
 
 # Registro de usuario
 

@@ -4,7 +4,7 @@
 {% block contenido %}
     <div class="card">
         <div class="card-header">
-            {% if es_admin %}
+            {% if is_admin %}
             <a name=""id=""class="btn btn-primary"href="{% url 'crear_producto' %}"role="button">AGREGAR</a>
             {% endif %}
         </div>
@@ -69,7 +69,7 @@
                             <td>{{ producto.stockActual}}</td>
                             
                             <td>
-                                {% if es_admin %}
+                                {% if is_admin %}
                                 <a name=""id=""class="btn btn-info"href="{% url 'editar_producto' producto.id %}"role="button">Editar</a> 
                                 |
                                 <a name=""id=""class="btn btn-danger"href="{% url 'eliminar_producto' producto.id %}"role="button">Borrar</a>

@@ -140,15 +140,15 @@
       
       <a href="{% url 'inicio' %}" class="{% if request.resolver_match.url_name == 'inicio' %}active{% endif %}">INICIO</a>
       
-      {% if es_admin %}
+      {% if is_admin %}
       <a href="{% url 'crear_producto' %}" class="{% if request.resolver_match.url_name == 'crear_producto' %}active{% endif %}">AGREGAR PRODUCTOS</a>
       {% endif %}
       
-      {% if es_admin or es_empleado %}
+      {% if is_admin or is_empleado %}
       <a href="{% url 'productos' %}" class="{% if request.resolver_match.url_name == 'productos' %}active{% endif %}">LISTA DE PRODUCTOS</a>
       {% endif %}
 
-      {% if es_admin or es_empleado %}
+      {% if is_admin or is_empleado %}
       <a href="{% url 'generar_reporte'%}" class="{% if request.resolver_match.url_name == 'generar_reporte' %}active{% endif %}">GENERAR REPORTES</a>
       {% endif %}
       
@@ -159,12 +159,10 @@
         <div>
           <strong>{{ request.user.username }}</strong>
           <div style="font-size: 12px; opacity: 0.8;">
-            {% if es_admin %}
-              Administrador
-            {% elif es_empleado %}
-              Empleado
+            {% if user_role %}
+              {{ user_role|capfirst }} 
             {% else %}
-              Usuario
+              Visitante
             {% endif %}
           </div>
         </div>
@@ -174,18 +172,7 @@
     </div>
 
     <div id="content" class="content">
-      {% if messages %}
-          {% for message in messages %}
-              <div class="alert alert-{{ message.tags }} m-3" role="alert">
-                  {{ message }}
-              </div>
-          {% endfor %}
-      {% endif %}
-      
-      {% block contenido %}
-      
-      {% endblock %}
-    </div>
+      </div>
 
     <script 
       src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" 
@@ -206,4 +193,3 @@
     </script>
   </body>
 </html>
-
