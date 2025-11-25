@@ -14,6 +14,7 @@ from django.db import transaction
 from .models import Venta
 from .forms import RegistroForm, LoginForm
 from .models import Usuario
+from .models import MovimientoInventario
 from django.contrib.auth.decorators import login_required, user_passes_test
 import csv
 
@@ -104,17 +105,32 @@ def productos (request):
 @login_required
 def crear_producto (request):
     formulario = ProductoForm(request.POST or None)
+    
     if formulario.is_valid():
-        formulario.save()
+        producto = formulario.save()
+        MovimientoInventario.objects.create(
+            tipo='CREAR',
+            cantidad=producto.stockActual,
+            idUsuario = request.user,
+            idDetalle = producto,
+        )        
+        messages.success(request, 'Producto creado exitosamente.')
         return redirect('productos')
     return render (request, 'productos/crear.html',{'formulario': formulario})
+
 
 @login_required
 def editar_producto (request, id):
     producto = Producto.objects.get(id=id)
     formulario = ProductoForm(request.POST or None, instance=producto)
     if formulario.is_valid() and request.method == 'POST':
-        formulario.save()
+        producto = formulario.save()
+        MovimientoInventario.objects.create(
+            tipo='EDITAR',
+            cantidad=producto.stockActual,
+            idUsuario = request.user,
+            idDetalle = producto,
+        )
         return redirect('productos')
     if producto.stockActual <= 5:
         messages.warning(request, 'Advertencia: El stock actual es bajo.')
@@ -127,7 +143,12 @@ def eliminar_producto (request, id):
     if request.user.rol != 'admin':
         messages.error(request, 'No tienes permiso para eliminar productos.')
         return redirect('productos')
-
+    MovimientoInventario.objects.create(
+        tipo='ELIMINAR',
+        cantidad=producto.stockActual,
+        idUsuario = request.user,
+        idDetalle = producto,
+    )
     producto.delete()
     messages.success(request, 'Producto eliminado exitosamente.')
     return redirect('productos')
@@ -172,6 +193,7 @@ def registrar_venta(request, id):
         return redirect('productos')
     
     return render(request, 'ventas/registrar.html', {'producto': producto})
+
 
 @login_required
 def reportes_ventas(request):
@@ -240,6 +262,7 @@ def reportes_ventas(request):
     
     return render(request, 'reportes/ventas.html', context)
 def generar_reporte(request):
+        
     productos = Producto.objects.all()
     return render(request, 'reportes/generar.html', {'productos': productos})
 

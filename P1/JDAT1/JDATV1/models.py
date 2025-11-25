@@ -81,3 +81,29 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return F"{self.nombreUsuario} {self.apellidoUsuario}"
+    
+class MovimientoInventario(models.Model):
+    TIPOS_MOVIMIENTO = [
+        ('CREAR', 'Creación'),
+        ('EDITAR', 'Edición'),  
+        ('ELIMINAR', 'Eliminación'),
+    ]
+
+    idMovimiento = models.AutoField(primary_key=True)
+    tipo = models.CharField(max_length=10, choices=TIPOS_MOVIMIENTO)
+    fecha = models.DateTimeField(auto_now_add=True)
+    cantidad = models.IntegerField(verbose_name="Cantidad/Stock")
+
+    idUsuario = models.ForeignKey(
+        'Usuario', 
+        on_delete=models.CASCADE, 
+        verbose_name="Usuario que realiza el movimiento"
+        )
+    
+    idDetalle = models.ForeignKey(
+        Producto,
+        on_delete=models.CASCADE,
+        verbose_name="Producto afectado"
+        )
+    def __str__(self):
+        return f"{self.tipo} - {self.idDetalle.nombreProducto} - {self.fecha}"
