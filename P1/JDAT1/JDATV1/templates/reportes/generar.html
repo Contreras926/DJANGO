@@ -1,0 +1,59 @@
+{% extends 'paginas/base.html' %}
+
+
+{% block contenido %}
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">GENERAR</h4>
+            
+            <div
+                class="table-responsive"
+            >
+                <table
+                    class="table table-primary"
+                >
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">NOMBRE PRODUCTO</th>
+                            <th scope="col">DESCRIPCION</th>
+                            <th scope="col">CATEGORIA</th>
+                            <th scope="col">PRECIO UNITARIO</th>
+                            <th scope="col">STOCK MINIMO</th>
+                            <th scope="col">STOCK ACTUAL</th>
+                            <th scope="col">ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos %}
+
+                        <tr >
+                            <td>{{ producto.id}}</td>
+                            <td>{{ producto.nombreProducto}}</td>
+                            <td>{{ producto.descripcion}}</td>
+                            <td>{{ producto.categoria}}</td>
+                            <td>${{ producto.precioUnitario|floatformat:2 }}</td>
+                            <td>{{ producto.stockMinimo}}</td>
+                            <td>{{ producto.stockActual}}</td>
+                            <td>
+                                <a name=""id=""class="btn btn-info"href="{% url 'registrar_venta' producto.id %}"role="button">Registrar</a>
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-header">
+                <a name=""id=""class="btn btn-primary"href="{% url 'reportes_ventas' %}"role="button">VER REPORTES</a>
+            </div>  
+
+
+        </div>
+        
+        <div class="card-footer text-muted">
+        Total de productos: {{ productos.count }}
+        </div>
+    </div>
+{% endblock %}

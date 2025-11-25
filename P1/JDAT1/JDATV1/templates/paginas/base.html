@@ -4,9 +4,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title></title>
+    <title>{% block title %}Sistema de Inventario{% endblock %}</title>
 
-    <!-- Bootstrap CSS -->
     <link 
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" 
       rel="stylesheet"
@@ -25,14 +24,53 @@
         left: 0;
         height: 100vh;
         width: 250px;
-        background-color: #00152b;
-        border-right: 1px solid #00152b;
-        transition: all 0.3s;
+        background: linear-gradient(100deg, #001935 0%, #000d1a 100%);
+        transition: all 0.4s ease;
         padding-top: 60px;
+        box-shadow: 3px 0 10px rgba(0,0,0,0.3);
+        overflow: hidden;
+        z-index: 9;
+      }
+      .sidebar-logo{
+        background: white;
+        border-radius: 12px;  
+        padding: 10px;
+        width: 80%;
+        margin: 0 auto 25px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .sidebar-logo img{
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        object-fit: contain;
       }
 
       .sidebar.collapsed {
-        margin-left: -250px;
+        left: -220px;;
+      }
+      .sidebar-toggle-btn {
+      position: absolute;
+      top: 50%;
+      right: -18px;
+      transform: translateY(-50%);
+      background-color: #f8f9fa;
+      border: 2px solid #0d6efd;
+      border-radius: 50%;
+      width: 35px;
+      height: 35px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: all 0.4s ease;
+      font-weight: bold;
+      color: #0d6efd;
+      z-index: 10;
+      }
+      .sidebar.collapsed .sidebar-toggle-btn {
+        right: -18px;
+        transform: translateY(-50%) rotate(180deg);
       }
 
       .sidebar a {
@@ -52,64 +90,103 @@
         color: #fff !important;
       }
 
-      /* Navbar superior */
-      .topbar {
-        position: fixed;
-        top: 0;
+      .user-info {
+        position: absolute;
+        bottom: 20px;
         left: 0;
         width: 100%;
-        height: 60px;
-        background-color: #ffffff;
-        border-bottom: 1px solid #dee2e6;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 20px;
-        z-index: 1000;
+        padding: 15px;
+        text-align: center;
+        color: white;
       }
-
-      .topbar button {
-        background: none;
-        border: none;
-        font-size: 1.5rem;
+      .user-info img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 10px;
+        color: white;
+      }
+      .sidebar.collapsed .user-info {
+        display: none;
       }
 
       /* Contenido */
       .content {
         margin-left: 250px;
-        padding: 80px 30px 30px;
-        transition: margin-left 0.3s;
+        transition: margin-left 0.3s ease;
       }
 
       .content.expanded {
-        margin-left: 0;
+        margin-left: 80px;
+      }
+
+      .main-content {
+       margin-left: 250px;
+       transition: all 0.4s ease;
+      }
+      .sidebar.collapsed ~ .main-content {
+        margin-left: 30px;
       }
     </style>
   </head>
 
-  <body>
-    <!-- BARRA SUPERIOR -->
-    <div class="topbar shadow-sm">
-      <button id="toggleSidebar" class="text-primary">&#9776;</button>
-      <h5 class="m-0 fw-bold text-primary">{% block titulo %}  {% endblock %}</h5>
-      <a href="#" class="text-danger fw-semibold text-decoration-none">Salir</a>
-    </div>
+<body>
 
-    <!-- SIDEBAR -->
     <div id="sidebar" class="sidebar">
-      <a href="{% url 'inicio' %}" class="active">INICIO</a>
-      <a href="{% url 'productos' %}">PRODUCTOS</a>
-      <a href="#">GENERAR REPORTES</a>
+      <div class="sidebar-logo">
+        <img src="{% static 'imagenes/jdat.jpg' %}" alt="LOGO JDAT" >
+      </div>
+      
+      <a href="{% url 'inicio' %}" class="{% if request.resolver_match.url_name == 'inicio' %}active{% endif %}">INICIO</a>
+      
+      {% if es_admin %}
+      <a href="{% url 'crear_producto' %}" class="{% if request.resolver_match.url_name == 'crear_producto' %}active{% endif %}">AGREGAR PRODUCTOS</a>
+      {% endif %}
+      
+      {% if es_admin or es_empleado %}
+      <a href="{% url 'productos' %}" class="{% if request.resolver_match.url_name == 'productos' %}active{% endif %}">LISTA DE PRODUCTOS</a>
+      {% endif %}
+
+      {% if es_admin or es_empleado %}
+      <a href="{% url 'generar_reporte'%}" class="{% if request.resolver_match.url_name == 'generar_reporte' %}active{% endif %}">GENERAR REPORTES</a>
+      {% endif %}
+      
+      <a href="{% url 'logout' %}">SALIR</a>
+
+      <div class="user-info">
+        <img src="{% static 'imagenes/usuario.png'%}" alt="User">
+        <div>
+          <strong>{{ request.user.username }}</strong>
+          <div style="font-size: 12px; opacity: 0.8;">
+            {% if es_admin %}
+              Administrador
+            {% elif es_empleado %}
+              Empleado
+            {% else %}
+              Usuario
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <button id="toggleSidebar" class="sidebar-toggle-btn">&lt;</button>
     </div>
 
-    <!-- CONTENIDO PRINCIPAL -->
     <div id="content" class="content">
+      {% if messages %}
+          {% for message in messages %}
+              <div class="alert alert-{{ message.tags }} m-3" role="alert">
+                  {{ message }}
+              </div>
+          {% endfor %}
+      {% endif %}
+      
       {% block contenido %}
       
       {% endblock %}
     </div>
 
-    <!-- Bootstrap JS -->
     <script 
       src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" 
       crossorigin="anonymous"></script>
@@ -117,7 +194,6 @@
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" 
       crossorigin="anonymous"></script>
 
-    <!-- Script para colapsar sidebar -->
     <script>
       const sidebar = document.getElementById('sidebar');
       const content = document.getElementById('content');
@@ -130,3 +206,4 @@
     </script>
   </body>
 </html>
+

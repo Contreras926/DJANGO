@@ -30,7 +30,7 @@
                 {% csrf_token %}
                 <div class="mb-4">
                     <label for="cantidad" class="form-label">
-                        <strong><i class="fas fa-shopping-cart"></i> Cantidad vendida:</strong>
+                        <strong><i class="fas fa-shopping-cart"></i> Cantidad a Vender:</strong>
                     </label>
                     <input type="number" 
                             class="form-control form-control-lg" 
@@ -46,7 +46,7 @@
                 </div>
                 
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                    <a href="{% url 'productos' %}" class="btn btn-secondary btn-lg">
+                    <a href="{% url 'generar_reporte' %}" class="btn btn-secondary btn-lg">
                         <i class="fas fa-arrow-left"></i> Cancelar
                     </a>
                     <button type="submit" class="btn btn-success btn-lg">

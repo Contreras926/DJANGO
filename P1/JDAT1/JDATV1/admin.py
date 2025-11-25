@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import Producto, Venta
+# Register your models here.
 
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):

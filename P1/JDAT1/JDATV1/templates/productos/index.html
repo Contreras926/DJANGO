@@ -1,72 +1,94 @@
 {% extends 'paginas/base.html' %}
 
-{% block titulo %}PRODUCTOS{% endblock %}
 
 {% block contenido %}
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <div>
-            <a class="btn btn-primary" href="{% url 'crear_producto' %}" role="button">
-                <i class="fas fa-plus-circle"></i> Agregar Producto
-            </a>
+    <div class="card">
+        <div class="card-header">
+            {% if es_admin %}
+            <a name=""id=""class="btn btn-primary"href="{% url 'crear_producto' %}"role="button">AGREGAR</a>
+            {% endif %}
         </div>
-        <div>
-            <a class="btn btn-warning" href="{% url 'reportes_ventas' %}" role="button">
-                <i class="fas fa-chart-line"></i> Ver Reportes de Ventas
-            </a>
+
+        {%if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} m-3" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        {% if alertas_stock %}
+        <div class="alert alert-warning">
+            <strong>¡Atención!</strong> Los siguientes productos tienen bajo stock:
+            <ul>
+                {% for p in alertas_stock %}
+                    <li> {{ p.nombreProducto }} - Stock: <strong>{{ p.stockActual }}</strong></li> 
+                {% endfor %}
+            </ul>
         </div>
-    </div>
-    <div class="card-body">
-        <h4 class="card-title">LISTA DE PRODUCTOS</h4>
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>NOMBRE</th>
-                        <th>DESCRIPCIÓN</th>
-                        <th>CATEGORÍA</th>
-                        <th>PRECIO</th>
-                        <th>STOCK MÍN</th>
-                        <th>STOCK ACTUAL</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for producto in productos %}
-                    <tr>
-                        <td>{{ producto.id }}</td>
-                        <td><strong>{{ producto.nombreProducto }}</strong></td>
-                        <td>{{ producto.descripcion }}</td>
-                        <td>{{ producto.categoria }}</td>
-                        <td>${{ producto.precioUnitario|floatformat:2 }}</td>
-                        <td>
-                            <span class="badge {% if producto.stockActual <= producto.stockMinimo %}bg-danger{% else %}bg-warning{% endif %}">
-                                {{ producto.stockMinimo }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="badge {% if producto.stockActual <= producto.stockMinimo %}bg-danger{% else %}bg-success{% endif %}">
-                                {{ producto.stockActual }}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="btn-group" role="group">
-                                <a class="btn btn-info btn-sm" href="{% url 'editar_producto' producto.id %}" title="Editar">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a class="btn btn-danger btn-sm" href="{% url 'eliminar_producto' producto.id %}" title="Eliminar">
-                                    <i class="fas fa-trash"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        {% endif %}
+
+        <div class="card-body">
+            <h4 class="card-title">PRODUCTOS</h4>
+            
+            <div
+                class="table-responsive"
+            >
+                <table
+                    class="table table-primary"
+                >
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">NOMBRE PRODUCTO</th>
+                            <th scope="col">DESCRIPCION</th>
+                            <th scope="col">CATEGORIA</th>
+                            <th scope="col">PRECIO UNITARIO</th>
+                            <th scope="col">STOCK MINIMO</th>
+                            <th scope="col">STOCK ACTUAL</th>
+                            <th scope="col">ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos %}
+
+                        <tr class="
+                        {% if producto.stockActual <= 1 %}
+                            table-danger
+                        {% elif producto.stockActual <= 5 %}
+                            table-warning
+                        {% endif %}
+                        " >
+
+                            <td>{{ producto.id}}</td>
+                            <td>{{ producto.nombreProducto}}</td>
+                            <td>{{ producto.descripcion}}</td>
+                            <td>{{ producto.categoria}}</td>
+                            <td>${{ producto.precioUnitario|floatformat:2 }}</td>
+                            <td>{{ producto.stockMinimo}}</td>
+                            <td>{{ producto.stockActual}}</td>
+                            
+                            <td>
+                                {% if es_admin %}
+                                <a name=""id=""class="btn btn-info"href="{% url 'editar_producto' producto.id %}"role="button">Editar</a> 
+                                |
+                                <a name=""id=""class="btn btn-danger"href="{% url 'eliminar_producto' producto.id %}"role="button">Borrar</a>
+                                {% else %}
+                                    <span class="badge bg-secondary">Solo Lectura</span>
+                                {% endif %}
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
         </div>
-    </div>
-    <div class="card-footer text-muted">
+        
+        <div class="card-footer text-muted">
         Total de productos: {{ productos.count }}
+        </div>
     </div>
-</div>
 {% endblock %}

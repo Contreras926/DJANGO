@@ -1,0 +1,136 @@
+body {
+    background: linear-gradient(135deg, #0d6efd, #001f3f);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial;
+}
+
+.auth-card {
+    width: 400px;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+}
+
+.auth-title {
+    font-size: 26px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #0d6efd;
+}
+
+.btn-auth {
+    width: 100%;
+    background-color: #0d6efd;
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    font-size: 16px;
+}
+
+.btn-auth:hover {
+    background-color: #084298;
+}
+
+.auth-text {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.auth-card label {
+    font-weight: 600;
+}
+/* Fondo */
+.auth-body {
+    background: linear-gradient(135deg, #0d6efd, #002a66);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Tarjeta más grande */
+.big-card {
+    width: 430px;
+    padding: 45px;
+    border-radius: 18px;
+    background: white;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+/* Logo */
+.auth-logo {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.auth-logo img {
+    width: 120px;
+    height: auto;
+    border-radius: 10px;
+}
+
+/* Inputs con iconos */
+.input-icon {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.input-icon .icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    opacity: 0.7;
+}
+
+.input-icon input {
+    width: 100%;
+    padding: 12px 12px 12px 38px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    outline: none;
+    transition: 0.2s;
+}
+
+.input-icon input:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 5px rgba(13,110,253,0.4);
+}
+
+/* Botón */
+.btn-auth {
+    width: 100%;
+    background: #0d6efd;
+    color: white;
+    border: none;
+    padding: 12px;
+    margin-top: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.btn-auth:hover {
+    background: #0b5ed7;
+}
+
+/* Texto debajo */
+.auth-text {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.auth-text a {
+    color: #0d6efd;
+    text-decoration: none;
+    font-weight: bold;
+}
+

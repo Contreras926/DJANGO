@@ -1,10 +1,8 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from .models import Producto, Venta
+from .models import Producto
 from .forms import ProductoForm
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth.models import User
-from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import login, logout, authenticate
 from django.db import IntegrityError
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -13,84 +11,204 @@ from datetime import datetime
 import json
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from .models import Venta
+from .forms import RegistroForm, LoginForm
+from .models import Usuario
+from .models import MovimientoInventario
+from django.contrib.auth.decorators import login_required, user_passes_test
+from functools import wraps
 
-# Importaciones de Plotly
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.offline import plot
+# 1. SECCIÓN DE DECORADORES Y AYUDAS (Antes en decorators.py)
+
+def rol_requerido(roles_permitidos):
+    """
+    Decorador para restringir acceso.
+    """
+    def decorator(view_func):
+        @wraps(view_func)
+        def _wrapped_view(request, *args, **kwargs):
+            if not request.user.is_authenticated:
+                return redirect('login')
+            
+            # Normalizar a lista
+            roles = [roles_permitidos] if isinstance(roles_permitidos, str) else roles_permitidos
+            
+            # Verificar rol (asumiendo campo 'rol' en modelo Usuario)
+            if request.user.rol not in roles:
+                messages.error(request, '⛔ Acceso denegado.')
+                return redirect('inicio')
+            
+            return view_func(request, *args, **kwargs)
+        return _wrapped_view
+    return decorator
+
+# Atajos para usar abajo en las vistas
+admin_required = rol_requerido('admin')
+empleado_required = rol_requerido('empleado')
+admin_o_empleado = rol_requerido(['admin', 'empleado'])
+
+# 2. SECCIÓN CONTEXT PROCESSOR (Antes en context_processors.py)
+
+def roles_context(request):
+    """
+    Inyecta variables globales a los templates.
+    """
+    if request.user.is_authenticated:
+        return {
+            'es_admin': request.user.rol == 'admin',
+            'es_empleado': request.user.rol == 'empleado'
+        }
+    return {'es_admin': False, 'es_empleado': False}
+
+# 3. SECCIÓN DE VISTAS (Tus funciones normales)
+
+@login_required
+@admin_required  # Usando el decorador definido arriba
+def eliminar_producto(request, id):
+    # Lógica de eliminar
+    messages.success(request, 'Producto eliminado')
+    return redirect('inicio')
+
+@login_required
+@admin_o_empleado
+def ver_panel(request):
+    return render(request, 'panel.html')
 
 
-# Create your views here.
 
+# Registro de usuario
+
+def registro_view(request):
+    if request.method == 'POST':
+        form = RegistroForm(request.POST)
+        if form.is_valid():
+            usuario = form.save(commit=False)
+            usuario.set_password(form.cleaned_data['password'])
+            usuario.save()
+            messages.success(request, 'Registro exitoso. Ahora puedes iniciar sesión.')
+            return redirect('login')
+    else:
+        form = RegistroForm()
+    return render(request, 'reglog/registro.html', {'form': form})
+
+def login_view(request):
+    if request.method == 'POST':
+        form = LoginForm(request, data=request.POST)
+        if form.is_valid():
+            correo = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+
+            user = authenticate(request, correo=correo, password=password)
+            if user is not None:
+                login(request, user)
+                if user.rol == 'admin':
+                    return redirect('inicio')  # Redirigir a la página de administración
+                else:
+                    return redirect('inicio')  # Redirigir a la página de usuario estándar
+                
+            messages.error(request, 'Correo o contraseña incorrectos.')                
+    else:
+        form = LoginForm()
+    return render(request, 'reglog/login.html', {'form': form})
+
+def logout_view(request):
+    logout(request)
+    return redirect('login')
+
+def es_admin(user):
+    return user.rol == 'admin'
+
+def es_empleado(user):
+    return user.rol == 'empleado'   
+
+
+# INICIO PAGINA
+@login_required
 def inicio(request):
-    return render(request, 'paginas/inicio.html') 
+    ventas = Venta.objects.values('producto__nombreProducto').annotate(
+        total_vendido=Sum('cantidad')
+    )
 
-def nosotros(request):
-    return render(request, 'paginas/nosotros.html')     
+    ventas_por_producto = {
+        V['producto__nombreProducto']: V['total_vendido'] for V in ventas
+    }
 
-def productos(request):
     productos = Producto.objects.all()
-    return render(request, 'productos/index.html', {'productos': productos})
+    stock_data = {p.nombreProducto: p.stockActual for p in productos}
 
-def crear_producto(request):
+
+    return render (request, 'paginas/inicio.html',{
+        'ventas_por_producto': ventas_por_producto,
+        'stock_data': stock_data,
+    })   
+
+@login_required
+def productos (request):
+    productos = Producto.objects.all()
+
+    alertas_stock = productos.filter(stockActual__lt=5)
+
+
+    return render (request, 'productos/index.html', {
+        'productos': productos,
+        'alertas_stock': alertas_stock
+        })
+
+    # CRUD PRODUCTOS
+@login_required
+def crear_producto (request):
     formulario = ProductoForm(request.POST or None)
+    
     if formulario.is_valid():
-        formulario.save()
+        producto = formulario.save()
+        MovimientoInventario.objects.create(
+            tipo='CREAR',
+            cantidad=producto.stockActual,
+            idUsuario = request.user,
+            idDetalle = producto,
+        )        
+        messages.success(request, 'Producto creado exitosamente.')
         return redirect('productos')
-    return render(request, 'productos/crear.html', {'formulario': formulario})
+    return render (request, 'productos/crear.html',{'formulario': formulario})
 
-def editar_producto(request, id):
+
+@login_required
+def editar_producto (request, id):
     producto = Producto.objects.get(id=id)
     formulario = ProductoForm(request.POST or None, instance=producto)
     if formulario.is_valid() and request.method == 'POST':
-        formulario.save()
+        producto = formulario.save()
+        MovimientoInventario.objects.create(
+            tipo='EDITAR',
+            cantidad=producto.stockActual,
+            idUsuario = request.user,
+            idDetalle = producto,
+        )
         return redirect('productos')
-    return render(request, 'productos/editar.html', {'formulario': formulario})
+    if producto.stockActual <= 5:
+        messages.warning(request, 'Advertencia: El stock actual es bajo.')
+    return render (request, 'productos/editar.html', {'formulario': formulario})
 
-def eliminar_producto(request, id):
-    libro = Producto.objects.get(id=id)
-    libro.delete()
+@login_required
+def eliminar_producto (request, id):
+    producto = Producto.objects.get(id=id)
+
+    if request.user.rol != 'admin':
+        messages.error(request, 'No tienes permiso para eliminar productos.')
+        return redirect('productos')
+    MovimientoInventario.objects.create(
+        tipo='ELIMINAR',
+        cantidad=producto.stockActual,
+        idUsuario = request.user,
+        idDetalle = producto,
+    )
+    producto.delete()
+    messages.success(request, 'Producto eliminado exitosamente.')
     return redirect('productos')
 
-def register(request):
-    if request.method == 'GET':
-        return render(request, 'signup.html', {
-            'form': UserCreationForm()
-        })
-    else:
-        password1 = request.POST.get('password1')
-        password2 = request.POST.get('password2')
-        username = request.POST.get('username')
 
-        if password1 != password2:
-            messages.error(request, 'Las contraseñas no coinciden')
-            return render(request, 'signup.html', {'form': UserCreationForm()})
-
-        try:
-            user = User.objects.create_user(username=username, password=password1)
-            user.save()
-            login(request, user)
-            return redirect('inicio')
-        except IntegrityError:
-            messages.error(request, 'El usuario ya existe')
-            return render(request, 'signup.html', {'form': UserCreationForm()})
-
-def signin(request):
-    if request.method == 'GET':
-        return render(request, 'signin.html', {'form': AuthenticationForm()})
-    else:
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-
-        user = authenticate(request, username=username, password=password)
-
-        if user is None:
-            messages.error(request, 'Nombre de usuario o contraseña incorrectos')
-            return render(request, 'signin.html', {'form': AuthenticationForm()})
-        else:
-            login(request, user)
-            return redirect('inicio')
-
+#REPORTES
+@login_required
 @transaction.atomic
 def registrar_venta(request, id):
     producto = get_object_or_404(Producto, id=id)
@@ -106,18 +224,21 @@ def registrar_venta(request, id):
             messages.error(request, 'La cantidad debe ser mayor a cero')
             return render(request, 'ventas/registrar.html', {'producto': producto})
         
+        # Bloquear el producto para evitar condiciones de carrera
         producto = Producto.objects.select_for_update().get(id=id)
         
         if cantidad > producto.stockActual:
             messages.error(request, f'Stock insuficiente. Stock actual: {producto.stockActual}')
             return render(request, 'ventas/registrar.html', {'producto': producto})
         
+        # Registrar la venta - USANDO preciolmitario (tu campo actual)
         Venta.objects.create(
             producto=producto,
             cantidad=cantidad,
-            precio_venta=producto.precioUnitario
+            precio_venta=producto.precioUnitario  # ← USA preciolmitario
         )
         
+        # Actualizar stock
         producto.stockActual -= cantidad
         producto.save()
         
@@ -127,148 +248,18 @@ def registrar_venta(request, id):
     return render(request, 'ventas/registrar.html', {'producto': producto})
 
 
-# FUNCIONES GENERADORAS DE GRÁFICAS PLOTLY
-
-def generar_grafica_ventas_plotly(ventas_por_producto):
-    """
-    Genera gráfica de barras interactiva con Plotly
-    
-    Args:
-        ventas_por_producto (dict): {nombre_producto: cantidad}
-    
-    Returns:
-        str: HTML embebible de la gráfica
-    """
-    if not ventas_por_producto:
-        return '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> No hay ventas registradas para mostrar.</div>'
-    
-    productos = list(ventas_por_producto.keys())
-    cantidades = list(ventas_por_producto.values())
-    
-    fig = go.Figure(data=[
-        go.Bar(
-            x=productos,
-            y=cantidades,
-            marker=dict(
-                color=cantidades,
-                colorscale='Blues',
-                line=dict(color='rgb(8,48,107)', width=2)
-            ),
-            text=cantidades,
-            textposition='auto',
-            hovertemplate='<b>%{x}</b><br>Unidades: %{y}<extra></extra>'
-        )
-    ])
-    
-    fig.update_layout(
-        title={
-            'text': 'Productos Más Vendidos',
-            'font': {'size': 20, 'family': 'Arial, sans-serif', 'color': '#2c3e50'},
-            'x': 0.5,
-            'xanchor': 'center'
-        },
-        xaxis=dict(
-            title='Productos',
-            tickangle=-45,
-            showgrid=False
-        ),
-        yaxis=dict(
-            title='Unidades Vendidas',
-            showgrid=True,
-            gridcolor='rgba(0,0,0,0.1)'
-        ),
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)',
-        margin=dict(l=50, r=50, t=80, b=100),
-        height=400,
-        hovermode='x unified'
-    )
-    
-    config = {
-        'displayModeBar': True,
-        'displaylogo': False,
-        'modeBarButtonsToRemove': ['select2d', 'lasso2d'],
-        'responsive': True
-    }
-    
-    # CORREGIDO: include_plotlyjs=False
-    plot_html = plot(fig, output_type='div', include_plotlyjs=False, config=config)
-    return plot_html
-
-
-def generar_grafica_stock_plotly(stock_data):
-    """
-    Genera gráfica circular interactiva con Plotly
-    
-    Args:
-        stock_data (dict): {nombre_producto: cantidad_stock}
-    
-    Returns:
-        str: HTML embebible de la gráfica
-    """
-    if not stock_data:
-        return '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> No hay productos para mostrar.</div>'
-    
-    productos = list(stock_data.keys())
-    cantidades = list(stock_data.values())
-    
-    fig = go.Figure(data=[
-        go.Pie(
-            labels=productos,
-            values=cantidades,
-            hole=0.3,
-            marker=dict(
-                colors=px.colors.qualitative.Set3,
-                line=dict(color='white', width=2)
-            ),
-            textinfo='label+percent',
-            textposition='inside',
-            hovertemplate='<b>%{label}</b><br>Stock: %{value}<br>%{percent}<extra></extra>'
-        )
-    ])
-    
-    fig.update_layout(
-        title={
-            'text': 'Distribución de Inventario',
-            'font': {'size': 18, 'family': 'Arial, sans-serif', 'color': '#2c3e50'},
-            'x': 0.5,
-            'xanchor': 'center'
-        },
-        showlegend=True,
-        legend=dict(
-            orientation='h',
-            yanchor='bottom',
-            y=-0.2,
-            xanchor='center',
-            x=0.5
-        ),
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)',
-        margin=dict(l=20, r=20, t=80, b=80),
-        height=400
-    )
-    
-    config = {
-        'displayModeBar': True,
-        'displaylogo': False,
-        'modeBarButtonsToRemove': ['select2d', 'lasso2d'],
-        'responsive': True
-    }
-    
-    #  CORREGIDO: include_plotlyjs=False
-    plot_html = plot(fig, output_type='div', include_plotlyjs=False, config=config)
-    return plot_html
-
-
+@login_required
 def reportes_ventas(request):
-    """
-    Vista de reportes con gráficas Plotly
-    """
+    # Obtener parámetros de filtro
     fecha_inicio = request.GET.get('fecha_inicio')
     fecha_fin = request.GET.get('fecha_fin')
-    
-    ventas = Venta.objects.select_related('producto').all()
+    categoria = request.GET.get('categoria')
 
+    categorias = Producto.objects.values_list('categoria', flat=True).distinct()
+
+    ventas = Venta.objects.select_related('producto').all()
+    
+    # Aplicar filtros de fecha si existen
     if fecha_inicio:
         try:
             fecha_inicio_dt = datetime.strptime(fecha_inicio, '%Y-%m-%d')
@@ -282,7 +273,9 @@ def reportes_ventas(request):
             ventas = ventas.filter(fecha_venta__date__lte=fecha_fin_dt)
         except ValueError:
             fecha_fin = None
-    
+    if categoria:
+        ventas = ventas.filter(producto__categoria=categoria)
+    # Cálculos para reportes usando agregación
     ventas_stats = ventas.aggregate(
         total_ventas=Sum('cantidad'),
         ingresos_totales=Sum(F('cantidad') * F('precio_venta'), output_field=FloatField())
@@ -291,43 +284,68 @@ def reportes_ventas(request):
     total_ventas = ventas_stats['total_ventas'] or 0
     ingresos_totales = ventas_stats['ingresos_totales'] or 0.0
     
+    # Datos para gráfica de ventas por producto
     ventas_por_producto_qs = ventas.values('producto__nombreProducto').annotate(
         total_vendido=Sum('cantidad')
     ).order_by('-total_vendido')
     
-    ventas_por_producto = {}
-    for item in ventas_por_producto_qs:
-        producto_nombre = item['producto__nombreProducto']
-        cantidad_vendida = item['total_vendido'] or 0
-        ventas_por_producto[producto_nombre] = cantidad_vendida
+    ventas_por_producto = {
+        item['producto__nombreProducto']: item['total_vendido'] 
+        for item in ventas_por_producto_qs
+    }
     
-    stock_data = {}
-    for producto in Producto.objects.all():
-        stock_data[producto.nombreProducto] = producto.stockActual
-    
-    productos = Producto.objects.all()
-    
-    # Generar gráficas con Plotly
-    grafica_ventas_html = generar_grafica_ventas_plotly(ventas_por_producto)
-    grafica_stock_html = generar_grafica_stock_plotly(stock_data)
+    # Datos para gráfica de stock
+    productos_stock = Producto.objects.all()
+    stock_data = {
+        producto.nombreProducto: producto.stockActual 
+        for producto in productos_stock
+    }
     
     context = {
         'ventas': ventas,
-        'productos': productos,
+        'ventas_por_producto': ventas_por_producto,
+        'stock_data': stock_data,
         'total_ventas': total_ventas,
         'ingresos_totales': round(ingresos_totales, 2),
         'fecha_inicio': fecha_inicio or '',
         'fecha_fin': fecha_fin or '',
-        'grafica_ventas': grafica_ventas_html,
-        'grafica_stock': grafica_stock_html,
+        'categoria': categoria or '',
+        'categorias': categorias,
     }
     
-    print("DEBUG - Ventas por producto:", ventas_por_producto)
-    print("DEBUG - Stock data:", stock_data)
-    
     return render(request, 'reportes/ventas.html', context)
+def generar_reporte(request):
+        
+    productos = Producto.objects.all()
+    return render(request, 'reportes/generar.html', {'productos': productos})
 
+#EXPORTAR CSV
 
-def logout_view(request):
-    logout(request)
-    return redirect('inicio')
+@login_required
+def exportar_csv (request):
+
+    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_fin = request.GET.get('fecha_fin')
+
+    ventas = Venta.objects.select_related('producto').all()
+
+    if fecha_inicio:
+        ventas = ventas.filter(fecha_venta__date__gte=fecha_inicio)
+    if fecha_fin:
+        ventas = ventas.filter(fecha_venta__date__lte=fecha_fin)
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="reporte_ventas.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Producto', 'Cantidad', 'Precio de Venta', 'Total', 'Fecha de Venta'])
+
+    for v in ventas:
+        writer.writerow([
+            v.producto.nombreProducto,
+            v.cantidad,
+            v.precio_venta,
+            v.cantidad * v.precio_venta,
+            v.fecha_venta.strftime('$d/$m/%Y %H:%M')
+        ])
+    return response
