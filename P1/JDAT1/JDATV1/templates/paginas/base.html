@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Sistema de Inventario{% endblock %}</title>
+    <title>{% block title %}Sistema de Inventario JDAT{% endblock %}</title>
 
     <link 
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" 
@@ -15,33 +15,40 @@
       body {
         min-height: 100vh;
         overflow-x: hidden;
+        background-color: #f8f9fa;
       }
 
-      /* Sidebar */
+      /* ========================================
+         SIDEBAR STYLES
+         ======================================== */
       .sidebar {
         position: fixed;
         top: 0;
         left: 0;
         height: 100vh;
         width: 250px;
-        background: linear-gradient(100deg, #001935 0%, #000d1a 100%);
+        background: linear-gradient(180deg, #001935 0%, #000d1a 100%);
         transition: all 0.4s ease;
-        padding-top: 60px;
-        box-shadow: 3px 0 10px rgba(0,0,0,0.3);
-        overflow: hidden;
-        z-index: 9;
+        padding-top: 20px;
+        box-shadow: 3px 0 15px rgba(0,0,0,0.3);
+        overflow-y: auto;
+        overflow-x: hidden;
+        z-index: 1000;
       }
-      .sidebar-logo{
+      
+      .sidebar-logo {
         background: white;
         border-radius: 12px;  
         padding: 10px;
-        width: 80%;
+        width: 85%;
         margin: 0 auto 25px;
         display: flex;
         justify-content: center;
         align-items: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       }
-      .sidebar-logo img{
+      
+      .sidebar-logo img {
         width: 100%;
         height: auto;
         border-radius: 8px;
@@ -49,47 +56,63 @@
       }
 
       .sidebar.collapsed {
-        left: -220px;;
+        left: -250px;
       }
+      
       .sidebar-toggle-btn {
-      position: absolute;
-      top: 50%;
-      right: -18px;
-      transform: translateY(-50%);
-      background-color: #f8f9fa;
-      border: 2px solid #0d6efd;
-      border-radius: 50%;
-      width: 35px;
-      height: 35px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-      cursor: pointer;
-      transition: all 0.4s ease;
-      font-weight: bold;
-      color: #0d6efd;
-      z-index: 10;
-      }
-      .sidebar.collapsed .sidebar-toggle-btn {
+        position: absolute;
+        top: 50%;
         right: -18px;
+        transform: translateY(-50%);
+        background-color: #ffffff;
+        border: 2px solid #0d6efd;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+        cursor: pointer;
+        transition: all 0.4s ease;
+        font-weight: bold;
+        color: #0d6efd;
+        z-index: 1001;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .sidebar.collapsed .sidebar-toggle-btn {
         transform: translateY(-50%) rotate(180deg);
       }
 
-      .sidebar a {
+      .sidebar nav {
+        padding: 0 10px;
+      }
+
+      .sidebar nav a {
         display: block;
-        padding: 10px 20px;
+        padding: 12px 20px;
+        margin: 5px 0;
         color: #ffffff;
         text-decoration: none;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-size: 14px;
+        font-weight: 500;
       }
 
-      .sidebar a:hover {
-        background-color: #e9ecef;
-        color: #0d6efd;
+      .sidebar nav a:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        transform: translateX(5px);
       }
 
-      .sidebar .active {
+      .sidebar nav a.active {
         background-color: #0d6efd;
         color: #fff !important;
+        box-shadow: 0 2px 8px rgba(13, 110, 253, 0.4);
       }
 
+      /* User Info Section */
       .user-info {
         position: absolute;
         bottom: 20px;
@@ -98,98 +121,82 @@
         padding: 15px;
         text-align: center;
         color: white;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
       }
+      
       .user-info img {
-        width: 50px;
-        height: 50px;
+        width: 60px;
+        height: 60px;
         border-radius: 50%;
         object-fit: cover;
         margin-bottom: 10px;
-        color: white;
+        border: 3px solid rgba(255, 255, 255, 0.2);
       }
-      .sidebar.collapsed .user-info {
-        display: none;
+      
+      .user-info .user-name {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 5px;
       }
-
-      /* Contenido */
-      .content {
-        margin-left: 250px;
-        transition: margin-left 0.3s ease;
-      }
-
-      .content.expanded {
-        margin-left: 80px;
-      }
-
-      .main-content {
-       margin-left: 250px;
-       transition: all 0.4s ease;
-      }
-      .sidebar.collapsed ~ .main-content {
-        margin-left: 30px;
+      
+      .user-info .role-badge {
+        background-color: rgba(255, 255, 255, 0.2);
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 11px;
+        margin-top: 5px;
+        display: inline-block;
+        backdrop-filter: blur(10px);
       }
     </style>
-  </head>
-
-<body>
-
-    <div id="sidebar" class="sidebar">
-      <div class="sidebar-logo">
-        <img src="{% static 'imagenes/jdat.jpg' %}" alt="LOGO JDAT" >
-      </div>
-      
-      <a href="{% url 'inicio' %}" class="{% if request.resolver_match.url_name == 'inicio' %}active{% endif %}">INICIO</a>
-      
-      {% if is_admin %}
-      <a href="{% url 'crear_producto' %}" class="{% if request.resolver_match.url_name == 'crear_producto' %}active{% endif %}">AGREGAR PRODUCTOS</a>
-      {% endif %}
-      
-      {% if is_admin or is_empleado %}
-      <a href="{% url 'productos' %}" class="{% if request.resolver_match.url_name == 'productos' %}active{% endif %}">LISTA DE PRODUCTOS</a>
-      {% endif %}
-
-      {% if is_admin or is_empleado %}
-      <a href="{% url 'generar_reporte'%}" class="{% if request.resolver_match.url_name == 'generar_reporte' %}active{% endif %}">GENERAR REPORTES</a>
-      {% endif %}
-      
-      <a href="{% url 'logout' %}">SALIR</a>
-
-      <div class="user-info">
-        <img src="{% static 'imagenes/usuario.png'%}" alt="User">
-        <div>
-          <strong>{{ request.user.username }}</strong>
-          <div style="font-size: 12px; opacity: 0.8;">
-            {% if user_role %}
-              {{ user_role|capfirst }} 
-            {% else %}
-              Visitante
-            {% endif %}
-          </div>
-        </div>
-      </div>
-
-      <button id="toggleSidebar" class="sidebar-toggle-btn">&lt;</button>
+    
+<div class="sidebar" id="sidebar">
+    <button class="sidebar-toggle-btn" id="sidebar-toggle-btn">
+        &#9664; 
+    </button>
+    
+    <div class="sidebar-logo">
+        <img src="{% static 'img/logo.png' %}" alt="Logo"> 
     </div>
 
-    <div id="content" class="content">
-      </div>
+    <nav>
+        <a href="{% url 'inicio' %}" class="active">Inicio</a>
+        <a href="{% url 'productos' %}">Inventario / Productos</a>
+        
+        {% if is_admin %}
+            <a href="{% url 'crear_producto' %}">➕ Nuevo Producto</a>
+            <a href="{% url 'registro' %}">👤 Registrar Usuario</a>
+            <a href="{% url 'reportes_ventas' %}">📊 Reportes de Ventas</a>
+            <a href="{% url 'generar_reporte' %}">📥 Generar Reporte CSV</a>
+        {% elif is_empleado %}
+            <a href="{% url 'reportes_ventas' %}">📊 Consultar Ventas</a>
+        {% endif %}
 
-    <script 
-      src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" 
-      crossorigin="anonymous"></script>
-    <script 
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" 
-      crossorigin="anonymous"></script>
+    </nav>
+    
+    <div class="user-info">
+        {% if request.user.is_authenticated %}
+            <div class="user-name">{{ request.user.nombreUsuario }} {{ request.user.apellidoUsuario }}</div>
+            <span class="role-badge">Rol: {{ user_role|capfirst }}</span>
+            <hr style="border-color: rgba(255,255,255,0.2); margin: 10px 0;">
+            <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-light w-100">
+                <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+            </a>
+        {% else %}
+            <a href="{% url 'login' %}" class="btn btn-primary w-100">Iniciar Sesión</a>
+        {% endif %}
+    </div>
+</div>
 
-    <script>
-      const sidebar = document.getElementById('sidebar');
-      const content = document.getElementById('content');
-      const toggleBtn = document.getElementById('toggleSidebar');
+<div class="container-fluid" style="margin-left: 250px; padding-top: 20px;" id="main-content">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
 
-      toggleBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
-        content.classList.toggle('expanded');
-      });
-    </script>
-  </body>
-</html>
+    {% block content %}{% endblock %}
+</div>    

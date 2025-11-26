@@ -12,15 +12,17 @@ class Producto(models.Model):
         ('Salsas', 'Salsas'),
         ('Bebidas', 'Bebidas'),
     ]
-    categoria = models.CharField(max_length=100, choices=CATEGORIAS,verbose_name="Categoría del Producto")
+    categoria = models.CharField(max_length=100, choices=CATEGORIAS, verbose_name="Categoría del Producto")
     precioUnitario = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Precio Unitario")
     stockMinimo = models.IntegerField(verbose_name="Stock Mínimo")
     stockActual = models.IntegerField(verbose_name="Stock Actual")
-def __str__(self):
+    
+    def __str__(self):
         return self.nombreProducto
 
+
 class Venta(models.Model):
-    producto = models.ForeignKey(Producto, on_delete = models.CASCADE, verbose_name="Producto")
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE, verbose_name="Producto")
     cantidad = models.IntegerField(verbose_name="Cantidad Vendida")
     fecha_venta = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Venta")
     precio_venta = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Precio de Venta")
@@ -47,6 +49,7 @@ class UsuarioManager(BaseUserManager):
         usuario.set_password(password)
         usuario.save(using=self._db)
         return usuario
+    
     def create_superuser(self, correo, nombreUsuario, apellidoUsuario, password):
         usuario = self.create_user(
             correo,
@@ -60,10 +63,12 @@ class UsuarioManager(BaseUserManager):
         usuario.save(using=self._db)
         return usuario
     
+
 ROLES = [
     ('admin', 'Administrador'),
     ('empleado', 'Empleado'),
 ]
+
 
 class Usuario(AbstractBaseUser, PermissionsMixin):
     nombreUsuario = models.CharField(verbose_name="Nombre", max_length=100)
@@ -80,8 +85,9 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['nombreUsuario', 'apellidoUsuario']
 
     def __str__(self):
-        return F"{self.nombreUsuario} {self.apellidoUsuario}"
+        return f"{self.nombreUsuario} {self.apellidoUsuario}"
     
+
 class MovimientoInventario(models.Model):
     TIPOS_MOVIMIENTO = [
         ('CREAR', 'Creación'),
@@ -98,12 +104,13 @@ class MovimientoInventario(models.Model):
         'Usuario', 
         on_delete=models.CASCADE, 
         verbose_name="Usuario que realiza el movimiento"
-        )
+    )
     
     idDetalle = models.ForeignKey(
         Producto,
         on_delete=models.CASCADE,
         verbose_name="Producto afectado"
-        )
+    )
+    
     def __str__(self):
         return f"{self.tipo} - {self.idDetalle.nombreProducto} - {self.fecha}"
