@@ -1,94 +1,87 @@
-{{% extends 'paginas/base.html' %}
-
+{% extends 'paginas/base.html' %}
 
 {% block contenido %}
-    <div class="card">
-        <div class="card-header">
-            {% if is_admin %}
-            <a name=""id=""class="btn btn-primary"href="{% url 'crear_producto' %}"role="button">AGREGAR</a>
-            {% endif %}
-        </div>
+<div class="card">
+    <div class="card-header">
+        {% if is_admin %}
+        <a class="btn btn-primary" href="{% url 'crear_producto' %}" role="button">AGREGAR PRODUCTO</a>
+        {% endif %}
+    </div>
 
-        {%if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} m-3" role="alert">
-                    {{ message }}
-                </div>
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} m-3">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if alertas_stock %}
+    <div class="alert alert-warning">
+        <strong>¡Atención!</strong> Los siguientes productos tienen bajo stock:
+        <ul>
+            {% for p in alertas_stock %}
+            <li>{{ p.nombreProducto }} — Stock: <strong>{{ p.stockActual }}</strong></li>
             {% endfor %}
-        {% endif %}
-        
-        {% if alertas_stock %}
-        <div class="alert alert-warning">
-            <strong>¡Atención!</strong> Los siguientes productos tienen bajo stock:
-            <ul>
-                {% for p in alertas_stock %}
-                    <li> {{ p.nombreProducto }} - Stock: <strong>{{ p.stockActual }}</strong></li> 
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
+        </ul>
+    </div>
+    {% endif %}
 
-        <div class="card-body">
-            <h4 class="card-title">PRODUCTOS</h4>
-            
-            <div
-                class="table-responsive"
-            >
-                <table
-                    class="table table-primary"
-                >
-                    <thead>
-                        <tr>
-                            <th scope="col">ID</th>
-                            <th scope="col">NOMBRE PRODUCTO</th>
-                            <th scope="col">DESCRIPCION</th>
-                            <th scope="col">CATEGORIA</th>
-                            <th scope="col">PRECIO UNITARIO</th>
-                            <th scope="col">STOCK MINIMO</th>
-                            <th scope="col">STOCK ACTUAL</th>
-                            <th scope="col">ACCIONES</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for producto in productos %}
+    <div class="card-body">
+        <h4 class="card-title">PRODUCTOS</h4>
 
-                        <tr class="
-                        {% if producto.stockActual <= 1 %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>NOMBRE</th>
+                        <th>DESCRIPCIÓN</th>
+                        <th>CATEGORÍA</th>
+                        <th>PRECIO</th>
+                        <th>STOCK MÍN.</th>
+                        <th>STOCK ACTUAL</th>
+                        <th>ACCIONES</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for producto in productos %}
+                    <tr class="
+                        {% if producto.stockActual <= producto.stockMinimo %}
                             table-danger
-                        {% elif producto.stockActual <= 5 %}
+                        {% elif producto.stockActual <= producto.stockMinimo|add:3 %}
                             table-warning
                         {% endif %}
-                        " >
+                    ">
+                        <td>{{ producto.id }}</td>
+                        <td>{{ producto.nombreProducto }}</td>
+                        <td>{{ producto.descripcion }}</td>
+                        <td>{{ producto.categoria }}</td>
+                        <td>${{ producto.precioUnitario|floatformat:"2" }}</td>
+                        <td>{{ producto.stockMinimo }}</td>
+                        <td>{{ producto.stockActual }}</td>
 
-                            <td>{{ producto.id}}</td>
-                            <td>{{ producto.nombreProducto}}</td>
-                            <td>{{ producto.descripcion}}</td>
-                            <td>{{ producto.categoria}}</td>
-                            <td>${{ producto.precioUnitario|floatformat:2 }}</td>
-                            <td>{{ producto.stockMinimo}}</td>
-                            <td>{{ producto.stockActual}}</td>
+                        <td>
+                            <a class="btn btn-success btn-sm me-2" href="{% url 'registrar_venta' producto.id %}">Vender</a>
                             
-                            <td>
-                                {% if is_admin %}
-                                <a name=""id=""class="btn btn-info"href="{% url 'editar_producto' producto.id %}"role="button">Editar</a> 
-                                |
-                                <a name=""id=""class="btn btn-danger"href="{% url 'eliminar_producto' producto.id %}"role="button">Borrar</a>
-                                {% else %}
-                                    <span class="badge bg-secondary">Solo Lectura</span>
-                                {% endif %}
-                            </td>
-
-                        </tr>
-
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            
-        </div>
-        
-        <div class="card-footer text-muted">
-        Total de productos: {{ productos.count }}
+                            {% if is_admin %}
+                                <a class="btn btn-info btn-sm" href="{% url 'editar_producto' producto.id %}">Editar</a>
+                                
+                                <form method="POST" action="{% url 'eliminar_producto' producto.id %}" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar {{ producto.nombreProducto }}? Esta acción es irreversible.');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger btn-sm">Borrar</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
+
+    <div class="card-footer text-muted">
+        Total de productos: {{ productos.count }}
+    </div>
+</div>
 {% endblock %}
