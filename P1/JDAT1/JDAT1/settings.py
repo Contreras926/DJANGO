@@ -25,7 +25,15 @@ SECRET_KEY = 'django-insecure-brj!e7v4n-suznryf8h8sbrs49@w9%_r#2_6jqqmat@ai4eon1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    "hugest-emerson-aloofly.ngrok-free.dev",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://hugest-emerson-aloofly.ngrok-free.dev",
+]
 
 
 # Application definition
@@ -77,7 +85,7 @@ WSGI_APPLICATION = 'JDAT1.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'dbjdat',
+        'NAME': 'pruebareg',
         'USER': 'root',
         'PASSWORD': '',
         'HOST': 'localhost',
@@ -103,6 +111,7 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+AUTH_USER_MODEL = 'JDATV1.Usuario'
 
 
 # Internationalization
@@ -121,7 +130,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-
+import os
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
